@@ -1,0 +1,5 @@
+*.suo
+Other
+SpotlightDownloader/bin
+SpotlightDownloader/obj
+.vs
