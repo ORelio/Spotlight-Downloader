@@ -3,6 +3,7 @@ using System.Linq;
 using System.IO;
 using SharpTools;
 using System.Diagnostics;
+using System.Collections.Generic;
 
 namespace SpotlightDownloader
 {
@@ -12,7 +13,7 @@ namespace SpotlightDownloader
     class Program
     {
         public const string Name = "SpotlightDL";
-        public const string Version = "1.0";
+        public const string Version = "1.1";
 
         static void Main(string[] args)
         {
@@ -27,6 +28,7 @@ namespace SpotlightDownloader
                 bool integrityCheck = true;
                 bool downloadMany = false;
                 bool metadata = false;
+                string fromFile = null;
 
                 if (args.Length > 1)
                 {
@@ -36,6 +38,9 @@ namespace SpotlightDownloader
                         {
                             case "--single":
                                 singleImage = true;
+                                break;
+                            case "--many":
+                                downloadMany = true;
                                 break;
                             case "--maxres":
                                 maximumRes = true;
@@ -82,11 +87,51 @@ namespace SpotlightDownloader
                             case "--skip-integrity":
                                 integrityCheck = false;
                                 break;
-                            case "--download-many":
-                                downloadMany = true;
-                                break;
                             case "--metadata":
                                 metadata = true;
+                                break;
+                            case "--from-file":
+                                i++;
+                                if (i < args.Length)
+                                    fromFile = args[i];
+                                else
+                                {
+                                    Console.Error.WriteLine("--from-file expects an additional argument.");
+                                    Environment.Exit(1);
+                                }
+                                if (!File.Exists(fromFile))
+                                {
+                                    Console.Error.WriteLine("Input file '" + fromFile + "' does not exist.");
+                                    Environment.Exit(1);
+                                }
+                                break;
+                            case "--from-dir":
+                                i++;
+                                if (i < args.Length)
+                                    fromFile = args[i];
+                                else
+                                {
+                                    Console.Error.WriteLine("--from-dir expects an additional argument.");
+                                    Environment.Exit(1);
+                                }
+                                if (Directory.Exists(fromFile))
+                                {
+                                    string[] jpegFiles = Directory.EnumerateFiles(fromFile, "*.jpg", SearchOption.AllDirectories).ToArray();
+                                    if (jpegFiles.Any())
+                                    {
+                                        fromFile = jpegFiles[new Random().Next(0, jpegFiles.Length)];
+                                    }
+                                    else
+                                    {
+                                        Console.Error.WriteLine("Input directory '" + fromFile + "' does not contain JPG files.");
+                                        Environment.Exit(1);
+                                    }
+                                }
+                                else
+                                {
+                                    Console.Error.WriteLine("Input directory '" + fromFile + "' does not exist.");
+                                    Environment.Exit(1);
+                                }
                                 break;
                             default:
                                 Console.Error.WriteLine("Unknown argument: " + args[i]);
@@ -101,6 +146,7 @@ namespace SpotlightDownloader
                     case "urls":
                     case "download":
                     case "wallpaper":
+                    case "lockscreen":
                         action = args[0].ToLower();
                         break;
                     default:
@@ -116,7 +162,9 @@ namespace SpotlightDownloader
 
                     do
                     {
-                        SpotlightImage[] images = Spotlight.GetImageUrls(maximumRes, portrait);
+                        SpotlightImage[] images = (fromFile != null && (action == "wallpaper" || action == "lockscreen"))
+                            ? new[] { new SpotlightImage() } // Skip API request, we'll use a local file
+                            : Spotlight.GetImageUrls(maximumRes, portrait);
 
                         if (images.Length < 1)
                         {
@@ -146,17 +194,37 @@ namespace SpotlightDownloader
                         {
                             if (singleImage || action == "wallpaper" || action == "lockscreen")
                             {
-                                string outputFile = randomImage.DownloadToFile(outputDir, integrityCheck, metadata, outputName);
+                                string outputFile = fromFile ?? randomImage.DownloadToFile(outputDir, integrityCheck, metadata, outputName);
                                 Console.WriteLine(outputFile);
                                 if (action == "wallpaper")
                                 {
                                     try
                                     {
-                                        Desktop.SetWallpaper(outputFile);
+                                        Desktop.SetWallpaper(fromFile ?? outputFile);
                                     }
                                     catch (Exception e)
                                     {
                                         Console.Error.WriteLine(e.GetType() + ": " + e.Message);
+                                        Environment.Exit(4);
+                                    }
+                                }
+                                else if (action == "lockscreen")
+                                {
+                                    if (FileSystemAdmin.IsAdmin())
+                                    {
+                                        try
+                                        {
+                                            Lockscreen.SetGlobalLockscreen(fromFile ?? outputFile);
+                                        }
+                                        catch (Exception e)
+                                        {
+                                            Console.Error.WriteLine(e.GetType() + ": " + e.Message);
+                                            Environment.Exit(4);
+                                        }
+                                    }
+                                    else
+                                    {
+                                        Console.Error.WriteLine("This program must run as administrator to change the global lockscreen.");
                                         Environment.Exit(4);
                                     }
                                 }
@@ -198,10 +266,10 @@ namespace SpotlightDownloader
             }
 
             foreach (string str in new[]{
-                    " ==== " + Program.Name + " v" + Program.Version + " - By ORelio ====",
+                    " ==== " + Program.Name + " v" + Program.Version + " - By ORelio - Microzoom.fr ====",
                     "",
-                    "Retrieve Spotlight images from Microsoft's Spotlight API.",
-                    "By default, " + Program.Name + " downloads images in current directory.",
+                    "Retrieve Windows Spotlight images by requesting the Microsoft Spotlight API.",
+                    Program.Name + " can also define images as wallpaper and system-wide lockscreen image.",
                     "",
                     "Usage:",
                     "  " + Program.Name + ".exe <action> [arguments]",
@@ -212,17 +280,20 @@ namespace SpotlightDownloader
                     "  urls               Query Spotlight API and print image URLs to standard output",
                     "  download           Download all images and print file path to standard output",
                     "  wallpaper          Download one random image and define it as wallpaper",
+                    "  lockscreen         Download one random image and define it as global lockscreen",
                     "",
                     "Arguments:",
                     "  --single           Print only one random url or download only one image as spotlight.jpg",
+                    "  --many             Try downloading as much images as possible by calling API many times",
                     "  --maxres           Force maximum image resolution instead of tailoring to current screen res",
                     "  --portrait         Force portrait image instead of autodetecting from current screen res",
                     "  --landscape        Force landscape image instead of autodetecting from current screen res",
                     "  --outdir <dir>     Set output directory instead of defaulting to working directory",
                     "  --outname <name>   Set output file name as <name>.jpg in single image mode, ignored otherwise",
                     "  --skip-integrity   Skip integrity check of downloaded files: file size and sha256 hash",
-                    "  --download-many    Try downloading as much images as possible by calling API many times.",
                     "  --metadata         Also save image metadata such as title & copyright as <image-name>.txt",
+                    "  --from-file        Set the specified file as wallpaper/lockscreen instead of downloading",
+                    "  --from-dir         Set a random image from the specified directory as wallpaper/lockscreen",
                     "",
                     "Exit codes:",
                     "  0                  Success",

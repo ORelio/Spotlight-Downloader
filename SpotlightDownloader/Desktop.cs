@@ -106,7 +106,7 @@ namespace SharpTools
             int SPIF_UPDATEINIFILE = 0x01;
             int SPIF_SENDWININICHANGE = 0x02;
             int SPI_SETDESKWALLPAPER = 20;
-            return SystemParametersInfo(SPI_SETDESKWALLPAPER, 0, path, permanent ? SPIF_UPDATEINIFILE | SPIF_SENDWININICHANGE : 0);
+            return SystemParametersInfo(SPI_SETDESKWALLPAPER, 0, System.IO.Path.GetFullPath(path), permanent ? SPIF_UPDATEINIFILE | SPIF_SENDWININICHANGE : 0);
         }
 
         [System.Runtime.InteropServices.DllImport("user32.dll")]

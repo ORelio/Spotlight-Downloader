@@ -65,7 +65,12 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Desktop.cs" />
+    <Compile Include="FileSystemAdmin.cs" />
     <Compile Include="Json.cs" />
+    <Compile Include="Lockscreen.cs" />
+    <Compile Include="Privilege20\NativeMethods.cs" />
+    <Compile Include="Privilege20\Privilege.cs" />
+    <Compile Include="Privilege20\SafeTokenHandle.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Spotlight.cs" />
