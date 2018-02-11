@@ -1,5 +1,5 @@
 ﻿=====================================================
-==== SpotlightDL v1.1 - By ORelio - Microzoom.fr ====
+==== SpotlightDL v1.2 - By ORelio - Microzoom.fr ====
 =====================================================
 
 Thanks for dowloading SpotlightDL!
@@ -10,7 +10,7 @@ SpotlightDL can also define images as wallpaper and system-wide lockscreen image
 It is useful in the following use cases:
  - Download the whole Spotlight library with maximum image resolution and metadata
  - Define Spotlight images as wallpaper, not only on Windows 10 but also on previous versions
- - Define Spotlight images as global lock screen: without ads, and without any user being logged in
+ - Define Spotlight images as global lock screen on Windows 7, 8 and 10, without ads on Windows 10
  - Chain SpotlightDL with your own scripts and apps by taking advantage of the url mode
 
 ============
@@ -38,7 +38,7 @@ update-lockscreen
   Windows folder and clear the lockscreen cache to force a lockscreen refresh.
 
 restore-lockscreen
-  This script restores the default lock screen image from Windows 10
+  This script restores the default lock screen image.
   This script must be run as administrator.
 
 generate-manual

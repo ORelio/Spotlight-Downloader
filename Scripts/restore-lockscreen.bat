@@ -1,9 +1,9 @@
 @echo off
 cd "%~dp0"
 
-:: This script restores the default lock screen image from Windows 10.
+:: This script restores the default lock screen image.
 :: SpotlightDownloader performs a backup before overwriting the file,
-:: so we just need to define the backup file as lockscreen image.
+:: so we just need to ask it to restore the backup.
 
 net session > nul 2>&1
 if not "%errorlevel%" == "0" (
@@ -12,4 +12,4 @@ if not "%errorlevel%" == "0" (
     exit
 )
 
-SpotlightDownloader lockscreen --from-file "%systemroot%\Web\Screen\img200.jpg"
+SpotlightDownloader lockscreen --restore

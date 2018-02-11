@@ -13,7 +13,7 @@ namespace SpotlightDownloader
     class Program
     {
         public const string Name = "SpotlightDL";
-        public const string Version = "1.1.1";
+        public const string Version = "1.2";
 
         static void Main(string[] args)
         {
@@ -29,6 +29,20 @@ namespace SpotlightDownloader
                 bool downloadMany = false;
                 bool metadata = false;
                 string fromFile = null;
+
+                switch (args[0].ToLower())
+                {
+                    case "urls":
+                    case "download":
+                    case "wallpaper":
+                    case "lockscreen":
+                        action = args[0].ToLower();
+                        break;
+                    default:
+                        Console.Error.WriteLine("Unknown action: " + args[0]);
+                        Environment.Exit(1);
+                        break;
+                }
 
                 if (args.Length > 1)
                 {
@@ -133,26 +147,35 @@ namespace SpotlightDownloader
                                     Environment.Exit(1);
                                 }
                                 break;
+                            case "--restore":
+                                if (action == "lockscreen")
+                                {
+                                    if (FileSystemAdmin.IsAdmin())
+                                    {
+                                        try
+                                        {
+                                            Lockscreen.RestoreDefaultGlobalLockscreen();
+                                            Environment.Exit(0);
+                                        }
+                                        catch (Exception e)
+                                        {
+                                            Console.Error.WriteLine(e.GetType() + ": " + e.Message);
+                                            Environment.Exit(4);
+                                        }
+                                    }
+                                    else
+                                    {
+                                        Console.Error.WriteLine("This program must run as administrator to restore the global lockscreen.");
+                                        Environment.Exit(4);
+                                    }
+                                }
+                                break;
                             default:
                                 Console.Error.WriteLine("Unknown argument: " + args[i]);
                                 Environment.Exit(1);
                                 break;
                         }
                     }
-                }
-
-                switch (args[0].ToLower())
-                {
-                    case "urls":
-                    case "download":
-                    case "wallpaper":
-                    case "lockscreen":
-                        action = args[0].ToLower();
-                        break;
-                    default:
-                        Console.Error.WriteLine("Unknown action: " + args[0]);
-                        Environment.Exit(1);
-                        break;
                 }
 
                 try
@@ -294,6 +317,7 @@ namespace SpotlightDownloader
                     "  --metadata         Also save image metadata such as title & copyright as <image-name>.txt",
                     "  --from-file        Set the specified file as wallpaper/lockscreen instead of downloading",
                     "  --from-dir         Set a random image from the specified directory as wallpaper/lockscreen",
+                    "  --restore          Restore the default lockscreen image, has no effect with other actions",
                     "",
                     "Exit codes:",
                     "  0                  Success",

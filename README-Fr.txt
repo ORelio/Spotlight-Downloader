@@ -1,5 +1,5 @@
 ﻿======================================================
-==== SpotlightDL v1.1 - Par ORelio - Microzoom.fr ====
+==== SpotlightDL v1.2 - Par ORelio - Microzoom.fr ====
 ======================================================
 
 Merci d'avoir téléchargé SpotlightDL!
@@ -10,7 +10,7 @@ SpotlightDL peut également définir des images en tant que fond d'écran ou sur
 Ce programme est utile dans les cas suivants :
  - Télécharger toute la bibliothèque d'images en définition maximale, avec fichiers de métadonnées
  - Définir les images en tant que fond d'écran, non seulement sous Windows 10 mais aussi sur les versions précédentes
- - Définir les images sur l'écran de verouillage global, sans les publicités, et même lorsqu'aucune session n'est ouverte
+ - Définir les images sur l'écran de verouillage global sous Windows 7, 8 et 10, sans les publicités sous Windows 10
  - Utiliser SpotlightDL dans vos propres scripts et programmes en appelant la fonction récupérant les URL des images
 
 =============
@@ -37,7 +37,7 @@ update-lockscreen
   et vide le cache de l'écran de verouillage afin d'en forcer la mise à jour immédiate.
 
 restore-lockscreen
-  Ce script restaure l'écran de verouillage par défaut de Windows 10
+  Ce script restaure l'écran de verouillage par défaut.
   Il requiert les droits administrateur.
 
 generate-manual

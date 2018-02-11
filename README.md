@@ -6,7 +6,7 @@ SpotlightDL can also define images as wallpaper and system-wide lockscreen image
 It is useful in the following use cases:
  - Download the whole Spotlight library with maximum image resolution and metadata
  - Define Spotlight images as wallpaper, not only on Windows 10 but also on previous versions
- - Define Spotlight images as global lock screen: without ads, and without any user being logged in
+ - Define Spotlight images as global lock screen on Win7/8/10, removing the ads on Windows 10
  - Chain SpotlightDL with your own scripts and apps by taking advantage of the url mode
 
 # How to use
@@ -52,7 +52,7 @@ Spotlight API URL was originally found in this [file](https://github.com/KoalaBR
 
 ## Global lock screen
 
-The global lock screen image is stored as `C:\Windows\Web\Screen\img100.jpg`.
+The global lock screen image for Windows 8 and 10 is stored as `C:\Windows\Web\Screen\img100.jpg`.
 SpotlightDL backups the image as `img200.jpg` if it does not already exists, then overwrite this file.
 The lock screen image cache, located at `C:\ProgramData\Microsoft\Windows\SystemData\S-1-5-18\ReadOnly\LockScreen_Z`, must be cleared for the change to take effect.
 
@@ -62,6 +62,16 @@ Then, programs running as administrator can overwrite the lockscreen image and c
 
 This way of replacing the lockscreen is basically a C# implementation of [this script](https://www.reddit.com/r/PowerShell/comments/5fglby/powershell_to_set_windows_10_lockscreen/daoepvj/),
 avoiding the use of the `takeown` and `iacls` commands which are not reliable due to a [localization issue](http://community.idera.com/powershell/ask_the_experts/f/powershell_for_windows-12/10227/trying-to-make-a-takeown-exe-cmdlet-but-locales-is-causing-a-problem).
+
+Windows 7 support is also implemented through the [OEMBackground](https://www.askvg.com/windows-7-supports-login-screen-customization-without-3rd-party-software-how-to-instructions-inside/) feature:
+
+````
+[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Authentication\LogonUI\Background]
+"OEMBackground"=dword:00000001
+````
+
+Then the image has to be placed in `C:\Windows\System32\oobe\info\backgrounds\backgroundDefault.jpg`
+Windows 7 enforces a limit of 250 KiB so SpotlightDL will recompress the image to the highest quality fitting in that limit.
 
 # License
 
