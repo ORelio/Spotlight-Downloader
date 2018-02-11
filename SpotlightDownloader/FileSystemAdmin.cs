@@ -8,6 +8,7 @@ namespace SharpTools
 {
     /// <summary>
     /// File system utilities for applications running as administrator
+    /// By ORelio (c) 2018 - CDDL 1.0
     /// </summary>
     public static class FileSystemAdmin
     {
@@ -55,29 +56,6 @@ namespace SharpTools
             finally
             {
                 processPrivilege.Revert();
-            }
-        }
-
-        /// <summary>
-        /// Delete all files and directories from the specified directory, keeping the root directory.
-        /// </summary>
-        /// <param name="path">Directory path</param>
-        /// <remarks>If the specified path is a file, nothing will be deleted</remarks>
-        /// <seealso>https://stackoverflow.com/a/1288747</seealso>
-        public static void DeleteContents(string path)
-        {
-            if ((File.GetAttributes(path) & FileAttributes.Directory) == FileAttributes.Directory)
-            {
-                DirectoryInfo di = new DirectoryInfo(path);
-
-                foreach (FileInfo file in di.GetFiles())
-                {
-                    file.Delete();
-                }
-                foreach (DirectoryInfo dir in di.GetDirectories())
-                {
-                    dir.Delete(true);
-                }
             }
         }
 
