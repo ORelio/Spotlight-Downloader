@@ -1,5 +1,5 @@
 ﻿======================================================
-==== SpotlightDL v1.2 - Par ORelio - Microzoom.fr ====
+==== SpotlightDL v1.3 - Par ORelio - Microzoom.fr ====
 ======================================================
 
 Merci d'avoir téléchargé SpotlightDL!
@@ -20,16 +20,27 @@ Ce programme est utile dans les cas suivants :
 Extraire l'archive si cela n'est pas déjà fait, puis appeler SpotlightDownloader.exe depuis l'invite de commande.
 Si vous n'avez pas l'habitude de l'invite de commande, quelques scripts Batch sont fournis pour vous aider :
 
-spotlight-download
+spotlight-download-archive
   Ce script télécharge autant d'images que possibles depuis l'API Windows à la une, en demandant
   la définition maximale et en sauvegardant les métadonnées. N'étant pas possible de lister toutes
   les images d'un coup, SpotlightDL va effectuer beaucoup d'appels à l'API pour découvrir autant
   d'images que possible, puis s'arrêter lorsqu'aucune nouvelle image n'est découverte.
   Vous pourriez manquer quelques images, mais devriez en obtenir la plupart.
 
+update-archive-and-wallpaper
+  Ce script effectue un appel à l'API Windows à la une, et ajoute le résultat à l'archive.
+  Il définit également une image de l'archive au hasard en tant que fond d'écran.
+  Cela permet d'archiver les images au fur et à mesure sans envoyer beaucoup de requêtes API.
+
+update-archive-and-lockscreen
+  Même fonctionnement qu'update-archive-and-wallpaper mais change l'écran de verouillage global.
+  Ce script doit être lancé en tant qu'administrateur car il remplace une image dans le dossier Windows
+  et vide le cache de l'écran de verouillage afin d'en forcer la mise à jour immédiate.
+
 update-wallpaper
   Ce script maintient un cache de quelques images et en définit une au hasard en tant que fond d'écran.
   Le cache permet d'avoir un peu de changement au niveau du fond d'écran même lorsque vous n'avez pas Internet.
+  Les images sont téléchargées pour votre définition d'écran, et les plus anciennes sont supprimées du cache.
 
 update-lockscreen
   Même fonctionnement qu'update-wallpaper mais définit l'image en tant qu'écran de verouillage global.
@@ -90,7 +101,7 @@ Cliquez sur "Créer une tâche..."
   Onglet Conditions
     - À votre convenance, décocher "Ne démarrer la tâche que si l'ordinateur est relié au secteur"
   Onglet Paramètres
-    - Si votre tâche a une heure planifier, par ex 10h tous les jours, mais que votre ordinateur
+    - Si votre tâche a une heure planifiée, par ex 10h tous les jours, mais que votre ordinateur
       est éteint, la tâche ne s'exécutera pas. Vous pouvez activer l'option "Exécuter la
       tâche dès que possible si un démarrage planifié est manqué" pour y remédier.
 
@@ -102,7 +113,13 @@ Cliquez sur OK pour sauvegarder votre tâche.
 
 Q: L'écran de verrouillage n'apparaît pas lorsque j'ai ouvert ma session ?
 R: Assurez-vous que l'image est également sélectionnée dans vos paramètres personnels d'écran de verouillage.
- 
-+---------------+
-| © 2018 ORelio |
-+---------------+
+
+Q: Combien d'images sont téléchargées par défaut ? (càd sans les arguments --single ou --many)
+R: Par défaut, la liste d'images retournées par un seul appel API: précédemment 6-7, actuellement une seule.
+
+Q: Certaines images n'ont pas de titre ou de copyright dans leur métadonnées?
+R: Ces informations ne sont pas fournies pour toutes les images au niveau de l'API Windows à la une.
+
++--------------------+
+| © 2018-2019 ORelio |
++--------------------+

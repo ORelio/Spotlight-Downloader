@@ -16,11 +16,13 @@ The download/url modes should also work on Mac/Linux using the Mono framework.
 
 A few Batch files are offered for ease of use for common tasks:
 
- - spotlight-download: Download Spotlight images
- - update-wallpaper: Set images as desktop wallpaper
- - update-lockscreen: Set images as system-wide lockscreen
- - restore-lockscreen: Restore default system-wide lockscreen
- - generate-manual: Generate a text file with command-line usage
+ - `spotlight-download-archive`: Download many images to a SpotlightArchive folder
+ - `update-archive-and-wallpaper`: Feed the Archive and use one image as wallpaper
+ - `update-archive-and-lockscreen`: Feed the Archive and use one image as lockscreen
+ - `update-wallpaper`: Randomize desktop wallpaper (using a fixed-size cache)
+ - `update-lockscreen`: Randomize system-wide lockscreen (using a fixed-size cache)
+ - `restore-lockscreen`: Restore default system-wide lockscreen
+ - `generate-manual`: Generate a text file with command-line usage
 
 If you wish to periodically update your wallpaper or lockscreen,
 you can schedule one of the provided script by following [these instructions](README-En.txt).
@@ -46,15 +48,15 @@ Where the expected arguments are:
  - `ctry` : Country, e.g. `us`
  - `time` : Time, e.g. `2017-12-31T23:59:59Z`
 
-The JSON response contains details about 6-7 images including image url, title, sha256, ads, etc.
+The JSON response contains details for one or more image(s) including image url, title, sha256, ads, etc.
 
 Spotlight API URL was originally found in this [file](https://github.com/KoalaBR/spotlight/blob/3164a43684dcadb751ce9a38db59f29453acf2fe/spotlightprovider.cpp#L17), thanks to the author for their findings!
 
 ## Global lock screen
 
-The global lock screen image for Windows 8 and 10 is stored as `C:\Windows\Web\Screen\img100.jpg`.
-SpotlightDL backups the image as `img200.jpg` if it does not already exists, then overwrite this file.
-The lock screen image cache, located at `C:\ProgramData\Microsoft\Windows\SystemData\S-1-5-18\ReadOnly\LockScreen_Z`, must be cleared for the change to take effect.
+The global lock screen images for Windows 8 and 10 are stored as `C:\Windows\Web\Screen\imgXXX.jpg`.
+SpotlightDL backups each image as `imgXXX.jpg.bak` if it does not already exists, then overwrite this file.
+The lock screen image cache, located at `C:\ProgramData\Microsoft\Windows\SystemData\S-1-5-18\ReadOnly\LockScreen_*`, must be cleared for the change to take effect.
 
 SpotlightDL gets around NTFS permissions on these folders [being locked down to TrustedInstaller](https://helpdeskgeek.com/windows-7/windows-7-how-to-delete-files-protected-by-trustedinstaller/)
 by setting the local `Administrators` group as new owner of the relevant files and folders, and granting full control to this group.

@@ -13,7 +13,7 @@ namespace SpotlightDownloader
     class Program
     {
         public const string Name = "SpotlightDL";
-        public const string Version = "1.2";
+        public const string Version = "1.3";
 
         static void Main(string[] args)
         {
@@ -27,8 +27,10 @@ namespace SpotlightDownloader
                 string outputName = "spotlight";
                 bool integrityCheck = true;
                 bool downloadMany = false;
+                int downloadAmount = int.MaxValue;
                 bool metadata = false;
                 string fromFile = null;
+                int apiTryCount = 3;
 
                 switch (args[0].ToLower())
                 {
@@ -55,6 +57,22 @@ namespace SpotlightDownloader
                                 break;
                             case "--many":
                                 downloadMany = true;
+                                break;
+                            case "--amount":
+                                i++;
+                                downloadMany = true;
+                                if (i >= args.Length)
+                                {
+                                    Console.Error.WriteLine("--amount expects an additional argument.");
+                                    Environment.Exit(1);
+                                }
+                                if (!int.TryParse(args[i], out downloadAmount) || downloadAmount < 0)
+                                {
+                                    Console.Error.WriteLine("Download amount must be a valid and positive number.");
+                                    Environment.Exit(1);
+                                }
+                                if (downloadAmount == 0)
+                                    downloadAmount = int.MaxValue;
                                 break;
                             case "--maxres":
                                 maximumRes = true;
@@ -100,6 +118,19 @@ namespace SpotlightDownloader
                                 break;
                             case "--skip-integrity":
                                 integrityCheck = false;
+                                break;
+                            case "--api-tries":
+                                i++;
+                                if (i >= args.Length)
+                                {
+                                    Console.Error.WriteLine("--api-tries expects an additional argument.");
+                                    Environment.Exit(1);
+                                }
+                                if (!int.TryParse(args[i], out apiTryCount) || apiTryCount <= 0)
+                                {
+                                    Console.Error.WriteLine("API tries must be a valid and strictly positive number.");
+                                    Environment.Exit(1);
+                                }
                                 break;
                             case "--metadata":
                                 metadata = true;
@@ -187,7 +218,7 @@ namespace SpotlightDownloader
                     {
                         SpotlightImage[] images = (fromFile != null && (action == "wallpaper" || action == "lockscreen"))
                             ? new[] { new SpotlightImage() } // Skip API request, we'll use a local file
-                            : Spotlight.GetImageUrls(maximumRes, portrait);
+                            : Spotlight.GetImageUrls(maximumRes, portrait, apiTryCount);
 
                         if (images.Length < 1)
                         {
@@ -217,7 +248,7 @@ namespace SpotlightDownloader
                         {
                             if (singleImage || action == "wallpaper" || action == "lockscreen")
                             {
-                                string outputFile = fromFile ?? randomImage.DownloadToFile(outputDir, integrityCheck, metadata, outputName);
+                                string outputFile = fromFile ?? randomImage.DownloadToFile(outputDir, integrityCheck, metadata, outputName, apiTryCount);
                                 Console.WriteLine(outputFile);
                                 if (action == "wallpaper")
                                 {
@@ -261,8 +292,18 @@ namespace SpotlightDownloader
                                 string imagePath = image.GetFilePath(outputDir);
                                 if (!File.Exists(imagePath))
                                 {
-                                    Console.WriteLine(image.DownloadToFile(outputDir, integrityCheck, metadata));
-                                    downloadCount++;
+                                    try
+                                    {
+                                        Console.WriteLine(image.DownloadToFile(outputDir, integrityCheck, metadata, null, apiTryCount));
+                                        downloadCount++;
+                                        downloadAmount--;
+                                        if (downloadAmount <= 0)
+                                            break;
+                                    }
+                                    catch (InvalidDataException)
+                                    {
+                                        Console.Error.WriteLine("Skipping invalid image: " + image.Uri);
+                                    }
                                 }
                             }
 
@@ -278,7 +319,7 @@ namespace SpotlightDownloader
                             Console.Error.WriteLine(e.GetType() + ": " + e.Message);
                             Environment.Exit(3);
                         }
-                    } while (downloadMany && (downloadCount > 0 || noNewImgCount < 10));
+                    } while (downloadMany && (downloadCount > 0 || noNewImgCount < 50) && downloadAmount > 0);
                     Environment.Exit(0);
                 }
                 catch (Exception e)
@@ -308,12 +349,14 @@ namespace SpotlightDownloader
                     "Arguments:",
                     "  --single           Print only one random url or download only one image as spotlight.jpg",
                     "  --many             Try downloading as much images as possible by calling API many times",
+                    "  --amount <n>       Stop downloading after <n> images successfully downloaded, implies --many",
                     "  --maxres           Force maximum image resolution instead of tailoring to current screen res",
                     "  --portrait         Force portrait image instead of autodetecting from current screen res",
                     "  --landscape        Force landscape image instead of autodetecting from current screen res",
                     "  --outdir <dir>     Set output directory instead of defaulting to working directory",
                     "  --outname <name>   Set output file name as <name>.jpg in single image mode, ignored otherwise",
                     "  --skip-integrity   Skip integrity check of downloaded files: file size and sha256 hash",
+                    "  --api-tries <n>    Amount of unsuccessfull API calls before giving up. Default is 3.",
                     "  --metadata         Also save image metadata such as title & copyright as <image-name>.txt",
                     "  --from-file        Set the specified file as wallpaper/lockscreen instead of downloading",
                     "  --from-dir         Set a random image from the specified directory as wallpaper/lockscreen",

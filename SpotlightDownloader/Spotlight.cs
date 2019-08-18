@@ -6,6 +6,7 @@ using SharpTools;
 using System.IO;
 using System.Collections.Generic;
 using System.Text;
+using System.Threading;
 
 namespace SpotlightDownloader
 {
@@ -48,11 +49,41 @@ namespace SpotlightDownloader
         /// Request new images from the Spotlight API and return image urls
         /// </summary>
         /// <param name="maxres">Force maximum image resolution. Otherwise, current main monitor screen resolution is used</param>
-        /// <param name="portrait">Null = Auto detect from current main monitor resolution. True = portrait, False = landscape.</param>
+        /// <param name="portrait">Null = Auto detect from current main monitor resolution, True = portrait, False = landscape.</param>
+        /// <param name="attempts">Amount of API call attempts before raising an exception if an error occurs</param>
         /// <returns>List of images</returns>
         /// <exception cref="System.Net.WebException">An exception is thrown if the request fails</exception>
         /// <exception cref="System.IO.InvalidDataException">An exception is thrown if the JSON data is invalid</exception>
-        public static SpotlightImage[] GetImageUrls(bool maxres = false, bool? portrait = null)
+        public static SpotlightImage[] GetImageUrls(bool maxres = false, bool? portrait = null, int attempts = 1)
+        {
+            while (true)
+            {
+                try
+                {
+                    attempts--;
+                    return GetImageUrlsSingleAttempt(maxres, portrait);
+                }
+                catch (Exception e)
+                {
+                    if (attempts > 0)
+                    {
+                        Console.Error.WriteLine("SpotlightAPI: " + e.GetType() + ": " + e.Message + " - Waiting 10 seconds before retrying...");
+                        Thread.Sleep(TimeSpan.FromSeconds(10));
+                    }
+                    else throw;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Request new images from the Spotlight API and return image urls (Single Attempt)
+        /// </summary>
+        /// <param name="maxres">Force maximum image resolution. Otherwise, current main monitor screen resolution is used</param>
+        /// <param name="portrait">Null = Auto detect from current main monitor resolution, True = portrait, False = landscape.</param>
+        /// <returns>List of images</returns>
+        /// <exception cref="System.Net.WebException">An exception is thrown if the request fails</exception>
+        /// <exception cref="System.IO.InvalidDataException">An exception is thrown if the JSON data is invalid</exception>
+        private static SpotlightImage[] GetImageUrlsSingleAttempt(bool maxres = false, bool? portrait = null)
         {
             List<SpotlightImage> images = new List<SpotlightImage>();
             Json.JSONData imageData = Json.ParseJson(PerformApiRequest(maxres));

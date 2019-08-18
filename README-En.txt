@@ -1,5 +1,5 @@
 ﻿=====================================================
-==== SpotlightDL v1.2 - By ORelio - Microzoom.fr ====
+==== SpotlightDL v1.3 - By ORelio - Microzoom.fr ====
 =====================================================
 
 Thanks for dowloading SpotlightDL!
@@ -20,17 +20,27 @@ It is useful in the following use cases:
 Extract the archive if not already extracted, then call SpotlightDownloader.exe from the command line.
 If you are not used to the command prompt, a few Batch files are offered for your convenience:
 
-spotlight-download
+spotlight-download-archive
   This script downloads as much images as possible from the Spotlight API,
   with maximum res and metadata. Please note that there is no actual way
   of listing *all* images so SpotlightDownloader will make many API calls
   to discover and download new images, and stop when no new images are
   discovered. It may miss a few images but you should get most of them.
 
+update-archive-and-wallpaper
+  This script calls once the Spotlight API and adds the result to the
+  Spotlight archive, then randomly defines a Spotlight image as wallpaper
+  This allows to gradually download images without hammering the Spotlight API.
+
+update-archive-and-lockscreen
+  Same as update-archive-and-lockscreen but updates the system-wide lockscreen.
+  This script must be run as administrator as it replaces an image in the
+  Windows folder and clear the lockscreen cache to force a lockscreen refresh.
+
 update-wallpaper
-  This script maintains a cache of several Spotlight pictures
-  and randomly defines a new Spotlight image as wallpaper
-  the cache allows a few updates without Internet access.
+  This script maintains a cache of several Spotlight pictures tailored to your screen
+  resolution and randomly defines a new Spotlight image as wallpaper. The cache allows
+  a few updates without Internet access, and oldest images are deleted from the cache.
 
 update-lockscreen
   Same as update-wallpaper but defines images as system-wide lockscreen
@@ -101,7 +111,13 @@ Click OK to save your task.
 
 Q: The lockscreen does not appear when I am logged on?
 R: Make sure the image is also seleted in your personal lock screen settings.
- 
-+---------------+
-| © 2018 ORelio |
-+---------------+
+
+Q: How many images are downloaded when using default mode? (i.e. without using --single or --many)
+R: Default mode downloads a list of images returned by a single API call: previously 6-7, currently only 1.
+
+Q: Some images do not have a title or copyright in their metadata?
+R: Those fields are not provided for all images by the Spotlight API.
+
++--------------------+
+| © 2018-2019 ORelio |
++--------------------+
