@@ -1,5 +1,5 @@
 ﻿=====================================================
-==== SpotlightDL v1.3 - By ORelio - Microzoom.fr ====
+==== SpotlightDL v1.4 - By ORelio - Microzoom.fr ====
 =====================================================
 
 Thanks for dowloading SpotlightDL!
@@ -117,6 +117,9 @@ R: Default mode downloads a list of images returned by a single API call: previo
 
 Q: Some images do not have a title or copyright in their metadata?
 R: Those fields are not provided for all images by the Spotlight API.
+
+Q: I do not want to have the image title inside my wallpaper or lockscreen. How to remove it?
+R: Edit the batch file you want to use and remove --embed-meta inside the corresponding command.
 
 +--------------------+
 | © 2018-2019 ORelio |

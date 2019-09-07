@@ -14,4 +14,4 @@ if not "%errorlevel%" == "0" (
 
 mkdir SpotlightCache > nul 2>&1
 SpotlightDownloader download --amount 10 --cache-size 10 --metadata --outdir SpotlightCache
-SpotlightDownloader lockscreen --from-dir SpotlightCache
+SpotlightDownloader lockscreen --from-dir SpotlightCache --embed-meta --outname lockscreen

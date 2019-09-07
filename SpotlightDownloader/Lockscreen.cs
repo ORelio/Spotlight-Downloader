@@ -80,7 +80,7 @@ namespace SharpTools
                     Win7_RegistryKey(false);
                 }
             }
-            else if ((WindowsVersion.WinMajorVersion == 6 && WindowsVersion.WinMajorVersion >= 2) /* Windows 8 and 10 */
+            else if ((WindowsVersion.WinMajorVersion == 6 && WindowsVersion.WinMinorVersion >= 2) /* Windows 8 and 10 */
                 || WindowsVersion.WinMajorVersion >= 10 /* Windows 10 and future Windows versions - might not work on newer versions */)
             {
                 string lockscreenDir = Win10_InitDir();

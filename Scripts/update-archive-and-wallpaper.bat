@@ -7,4 +7,4 @@ cd "%~dp0"
 
 mkdir SpotlightArchive > nul 2>&1
 SpotlightDownloader download --maxres --metadata --outdir SpotlightArchive
-SpotlightDownloader wallpaper --from-dir SpotlightArchive
+SpotlightDownloader wallpaper --from-dir SpotlightArchive --embed-meta --outname wallpaper

@@ -8,12 +8,12 @@ using System.Collections.Generic;
 namespace SpotlightDownloader
 {
     /// <summary>
-    /// Download Microsoft Spotlight images - By ORelio (c) 2018 - CDDL 1.0
+    /// Download Microsoft Spotlight images - By ORelio (c) 2018-2019 - CDDL 1.0
     /// </summary>
     class Program
     {
         public const string Name = "SpotlightDL";
-        public const string Version = "1.3";
+        public const string Version = "1.4";
 
         static void Main(string[] args)
         {
@@ -30,6 +30,7 @@ namespace SpotlightDownloader
                 int downloadAmount = int.MaxValue;
                 int cacheSize = int.MaxValue;
                 bool metadata = false;
+                bool embedMetadata = false;
                 string fromFile = null;
                 int apiTryCount = 3;
 
@@ -148,6 +149,9 @@ namespace SpotlightDownloader
                                 break;
                             case "--metadata":
                                 metadata = true;
+                                break;
+                            case "--embed-meta":
+                                embedMetadata = true;
                                 break;
                             case "--from-file":
                                 i++;
@@ -272,13 +276,15 @@ namespace SpotlightDownloader
                         {
                             if (singleImage || action == "wallpaper" || action == "lockscreen")
                             {
-                                string outputFile = fromFile ?? randomImage.DownloadToFile(outputDir, integrityCheck, metadata, outputName, apiTryCount);
-                                Console.WriteLine(outputFile);
+                                string imageFile = fromFile ?? randomImage.DownloadToFile(outputDir, integrityCheck, metadata, outputName, apiTryCount);
+                                if (embedMetadata)
+                                    imageFile = SpotlightImage.EmbedMetadata(imageFile, outputDir, outputName);
+                                Console.WriteLine(imageFile);
                                 if (action == "wallpaper")
                                 {
                                     try
                                     {
-                                        Desktop.SetWallpaper(fromFile ?? outputFile);
+                                        Desktop.SetWallpaper(imageFile);
                                     }
                                     catch (Exception e)
                                     {
@@ -292,7 +298,7 @@ namespace SpotlightDownloader
                                     {
                                         try
                                         {
-                                            Lockscreen.SetGlobalLockscreen(fromFile ?? outputFile);
+                                            Lockscreen.SetGlobalLockscreen(imageFile);
                                         }
                                         catch (Exception e)
                                         {
@@ -352,7 +358,7 @@ namespace SpotlightDownloader
                             .OrderByDescending(fileInfo => fileInfo.CreationTime)
                             .Skip(cacheSize))
                         {
-                            string metadataFile = Path.Combine(imgToDelete.DirectoryName, Path.GetFileNameWithoutExtension(imgToDelete.Name) + ".txt");
+                            string metadataFile = SpotlightImage.GetMetaLocation(imgToDelete.FullName);
                             if (File.Exists(metadataFile))
                                 File.Delete(metadataFile);
                             imgToDelete.Delete();
@@ -393,10 +399,11 @@ namespace SpotlightDownloader
                     "  --portrait         Force portrait image instead of autodetecting from current screen res",
                     "  --landscape        Force landscape image instead of autodetecting from current screen res",
                     "  --outdir <dir>     Set output directory instead of defaulting to working directory",
-                    "  --outname <name>   Set output file name as <name>.jpg in single image mode, ignored otherwise",
+                    "  --outname <name>   Set output file name as <name>.ext for --single or --embed-meta",
                     "  --skip-integrity   Skip integrity check of downloaded files: file size and sha256 hash",
                     "  --api-tries <n>    Amount of unsuccessful API calls before giving up. Default is 3.",
                     "  --metadata         Also save image metadata such as title & copyright as <image-name>.txt",
+                    "  --embed-meta       When available, embed metadata into wallpaper or locksceeen image",
                     "  --from-file        Set the specified file as wallpaper/lockscreen instead of downloading",
                     "  --from-dir         Set a random image from the specified directory as wallpaper/lockscreen",
                     "  --restore          Restore the default lockscreen image, has no effect with other actions",

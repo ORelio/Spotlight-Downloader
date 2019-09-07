@@ -4,6 +4,8 @@ using System.Net;
 using System.Text;
 using System.Security.Cryptography;
 using System.Threading;
+using System.Drawing;
+using SharpTools;
 
 namespace SpotlightDownloader
 {
@@ -12,11 +14,72 @@ namespace SpotlightDownloader
     /// </summary>
     class SpotlightImage
     {
+        private const string MetaHeader = "[SpotlightImage]";
+
         public string Uri { get; set; }
         public string Sha256 { get; set; }
         public int FileSize { get; set; }
         public string Title { get; set; }
         public string Copyright { get; set; }
+
+        /// <summary>
+        /// Get Metadata file location from JPG file location
+        /// </summary>
+        /// <param name="imagePath">Image file location</param>
+        /// <exception cref="System.IO.IOException">Thrown if an error occurs when accessing the specified file</exception>
+        /// <exception cref="System.IO.InvalidDataException">Thrown if the specified file is not a valid metadata file</exception>
+        /// <returns>Metadata file location</returns>
+        public static string GetMetaLocation(string imagePath)
+        {
+            return Path.Combine(Path.GetDirectoryName(imagePath), Path.GetFileNameWithoutExtension(imagePath) + ".txt");
+        }
+
+        /// <summary>
+        /// Load a SpotlightImage object from a Metatada file
+        /// </summary>
+        /// <param name="metadataFile">File to load information from</param>
+        /// <returns>SpotlightImage object</returns>
+        public static SpotlightImage LoadMeta(string metadataFile)
+        {
+            string[] lines = File.ReadAllLines(metadataFile);
+            if (lines.Length > 0 && lines[0] == MetaHeader)
+            {
+                SpotlightImage image = new SpotlightImage();
+                foreach (string line in lines)
+                {
+                    int equalIndex = line.IndexOf('=');
+                    if (equalIndex > 0)
+                    {
+                        string value = "";
+                        string key = line.Substring(0, equalIndex);
+                        if (line.Length > (equalIndex + 1))
+                            value = line.Substring(equalIndex + 1);
+                        switch (key)
+                        {
+                            case "uri":
+                                image.Uri = value;
+                                break;
+                            case "sha256":
+                                image.Sha256 = value;
+                                break;
+                            case "filesize":
+                                int fileSize;
+                                if (int.TryParse(value, out fileSize))
+                                    image.FileSize = fileSize;
+                                break;
+                            case "title":
+                                image.Title = value;
+                                break;
+                            case "copyright":
+                                image.Copyright = value;
+                                break;
+                        }
+                    }
+                }
+                return image;
+            }
+            else throw new InvalidDataException("Not a SpotlightImage metadata file: " + metadataFile);
+        }
 
         /// <summary>
         /// Get image path to which the image will be downloaded
@@ -111,7 +174,7 @@ namespace SpotlightDownloader
             {
                 string outputMeta = GetFilePath(outputDir, outputName, ".txt");
                 File.WriteAllLines(outputMeta, new[]{
-                    "[SpotlightImage]",
+                    MetaHeader,
                     "uri=" + Uri,
                     "sha256=" + Sha256,
                     "filesize=" + FileSize,
@@ -121,6 +184,151 @@ namespace SpotlightDownloader
             }
 
             return outputFile;
+        }
+
+        /// <summary>
+        /// Load an input image, adjust to screen res, embed metadata using current desktop scaling factor and save the result into a new image file
+        /// </summary>
+        /// <param name="inputImageFile">Input image file</param>
+        /// <param name="outputDir">Output directory</param>
+        /// <param name="outputName">Output file name</param>
+        /// <param name="adjustToScreen">Auto adjust image to current screen resolution</param>
+        /// <param name="adjustToScaling">Auto adjust text to current UI scaling factor</param>
+        /// <returns>Output file path</returns>
+        public static string EmbedMetadata(string inputImageFile, string outputDir, string outputName, bool adjustToScreen = true, bool adjustToScaling = true)
+        {
+            //Windows 7 or lower cannot use PNG as wallpaper or will convert PNG to JPG, better use BMP for best quality
+            string fileExtension = ".bmp";
+            var imageFormat = System.Drawing.Imaging.ImageFormat.Bmp;
+
+            //Windows 8 and 10 will convert BMP to JPG, better use PNG for best quality
+            if ((WindowsVersion.WinMajorVersion == 6 && WindowsVersion.WinMinorVersion >= 2)
+                || WindowsVersion.WinMajorVersion >= 10)
+            {
+                fileExtension = ".png";
+                imageFormat = System.Drawing.Imaging.ImageFormat.Png;
+            }
+
+            if (String.IsNullOrEmpty(outputName))
+                outputName = Path.GetFileNameWithoutExtension(inputImageFile);
+            string outputFile = Path.Combine(outputDir, outputName + fileExtension);
+
+            Image img = Image.FromFile(inputImageFile);
+
+            if (adjustToScreen)
+            {
+                Rectangle screen = System.Windows.Forms.Screen.PrimaryScreen.Bounds;
+                Image img2 = FixedImageResize(img, screen.Width, screen.Height, true);
+                img.Dispose();
+                img = img2;
+            }
+
+            string metadataFile = GetMetaLocation(inputImageFile);
+            if (File.Exists(metadataFile))
+            {
+                SpotlightImage meta = LoadMeta(metadataFile);
+                Graphics gfx = Graphics.FromImage(img);
+
+                gfx.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
+                gfx.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.HighQualityBicubic;
+                gfx.PixelOffsetMode = System.Drawing.Drawing2D.PixelOffsetMode.HighQuality;
+
+                int fontSize = 11;
+                if (adjustToScaling)
+                    fontSize = (int)((float)fontSize * Desktop.GetScalingFactor());
+                Font font = new Font("Segoe UI Semilight", fontSize);
+                SizeF titleSize = gfx.MeasureString(meta.Title, font);
+                if (titleSize.Width < img.Size.Width - 20)
+                {
+                    gfx.DrawString(
+                        meta.Title,
+                        font,
+                        Brushes.White,
+                        new Rectangle(
+                            img.Size.Width - 10 - (int)Math.Ceiling(titleSize.Width),
+                            10,
+                            (int)Math.Ceiling(titleSize.Width),
+                            (int)Math.Ceiling(titleSize.Height)
+                        )
+                    );
+                    gfx.Flush();
+                }
+            }
+
+            img.Save(outputFile, imageFormat);
+            img.Dispose();
+
+            return outputFile;
+        }
+
+        /// <summary>
+        /// Resize image to a fixed destination size while preserving aspect ratio
+        /// </summary>
+        /// <remarks>Source: stackoverflow.com/questions/10323633/</remarks>
+        /// <param name="image">Input image</param>
+        /// <param name="Width">Desized Width</param>
+        /// <param name="Height">Desized Height</param>
+        /// <param name="needToFill">True = crop to fill, False = fit inside</param>
+        /// <returns>Output image</returns>
+        private static Image FixedImageResize(Image image, int Width, int Height, bool needToFill)
+        {
+            int sourceWidth = image.Width;
+            int sourceHeight = image.Height;
+            int sourceX = 0;
+            int sourceY = 0;
+            double destX = 0;
+            double destY = 0;
+
+            double nScale = 0;
+            double nScaleW = 0;
+            double nScaleH = 0;
+
+            nScaleW = ((double)Width / (double)sourceWidth);
+            nScaleH = ((double)Height / (double)sourceHeight);
+
+            if (!needToFill)
+            {
+                nScale = Math.Min(nScaleH, nScaleW);
+            }
+            else
+            {
+                nScale = Math.Max(nScaleH, nScaleW);
+                destY = (Height - sourceHeight * nScale) / 2;
+                destX = (Width - sourceWidth * nScale) / 2;
+            }
+
+            if (nScale > 1)
+                nScale = 1;
+
+            int destWidth = (int)Math.Round(sourceWidth * nScale);
+            int destHeight = (int)Math.Round(sourceHeight * nScale);
+
+            System.Drawing.Bitmap bmPhoto = null;
+
+            try
+            {
+                bmPhoto = new System.Drawing.Bitmap(destWidth + (int)Math.Round(2 * destX), destHeight + (int)Math.Round(2 * destY));
+            }
+            catch (Exception ex)
+            {
+                throw new ApplicationException(string.Format("destWidth:{0}, destX:{1}, destHeight:{2}, desxtY:{3}, Width:{4}, Height:{5}",
+                    destWidth, destX, destHeight, destY, Width, Height), ex);
+            }
+
+            using (System.Drawing.Graphics grPhoto = System.Drawing.Graphics.FromImage(bmPhoto))
+            {
+                grPhoto.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.HighQualityBicubic;
+                grPhoto.CompositingQuality = System.Drawing.Drawing2D.CompositingQuality.HighQuality;
+                grPhoto.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.HighQuality;
+
+                Rectangle to = new System.Drawing.Rectangle((int)Math.Round(destX), (int)Math.Round(destY), destWidth, destHeight);
+                Rectangle from = new System.Drawing.Rectangle(sourceX, sourceY, sourceWidth, sourceHeight);
+                //Console.WriteLine("From: " + from.ToString());
+                //Console.WriteLine("To: " + to.ToString());
+                grPhoto.DrawImage(image, to, from, System.Drawing.GraphicsUnit.Pixel);
+
+                return bmPhoto;
+            }
         }
     }
 }

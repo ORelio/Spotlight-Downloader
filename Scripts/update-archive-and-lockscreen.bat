@@ -14,4 +14,4 @@ if not "%errorlevel%" == "0" (
 
 mkdir SpotlightArchive > nul 2>&1
 SpotlightDownloader download --maxres --metadata --outdir SpotlightArchive
-SpotlightDownloader lockscreen --from-dir SpotlightArchive
+SpotlightDownloader lockscreen --from-dir SpotlightArchive --embed-meta --outname lockscreen

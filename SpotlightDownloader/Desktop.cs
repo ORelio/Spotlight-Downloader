@@ -121,5 +121,25 @@ namespace SharpTools
             System.Diagnostics.Process.Start("RUNDLL32.EXE", "USER32.DLL,UpdatePerUserSystemParameters 1, True");
             UpdatePerUserSystemParameters();
         }
+
+        //stackoverflow.com/questions/5977445/
+
+        [DllImport("gdi32.dll")]
+        static extern int GetDeviceCaps(IntPtr hdc, int nIndex);
+        enum DeviceCap
+        {
+            VERTRES = 10,
+            DESKTOPVERTRES = 117,
+        }
+
+        public static float GetScalingFactor()
+        {
+            System.Drawing.Graphics g = System.Drawing.Graphics.FromHwnd(IntPtr.Zero);
+            IntPtr desktop = g.GetHdc();
+            int LogicalScreenHeight = GetDeviceCaps(desktop, (int)DeviceCap.VERTRES);
+            int PhysicalScreenHeight = GetDeviceCaps(desktop, (int)DeviceCap.DESKTOPVERTRES);
+            float ScreenScalingFactor = (float)PhysicalScreenHeight / (float)LogicalScreenHeight;
+            return ScreenScalingFactor; // 1.25 = 125%
+        }
     }
 }

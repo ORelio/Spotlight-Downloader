@@ -1,5 +1,5 @@
 ﻿======================================================
-==== SpotlightDL v1.3 - Par ORelio - Microzoom.fr ====
+==== SpotlightDL v1.4 - Par ORelio - Microzoom.fr ====
 ======================================================
 
 Merci d'avoir téléchargé SpotlightDL!
@@ -119,6 +119,9 @@ R: Par défaut, la liste d'images retournées par un seul appel API: précédemm
 
 Q: Certaines images n'ont pas de titre ou de copyright dans leur métadonnées?
 R: Ces informations ne sont pas fournies pour toutes les images au niveau de l'API Windows à la une.
+
+Q: Je ne veux pas du titre de l'image sur mon fond d'écran ou écran de verrouillage. Comment l'enlever ?
+R: Modifiez le fichier batch que vous utilisez pour enlever le paramètre --embed-meta dans la commande associée.
 
 +--------------------+
 | © 2018-2019 ORelio |
