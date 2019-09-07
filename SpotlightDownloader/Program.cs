@@ -28,6 +28,7 @@ namespace SpotlightDownloader
                 bool integrityCheck = true;
                 bool downloadMany = false;
                 int downloadAmount = int.MaxValue;
+                int cacheSize = int.MaxValue;
                 bool metadata = false;
                 string fromFile = null;
                 int apiTryCount = 3;
@@ -73,6 +74,19 @@ namespace SpotlightDownloader
                                 }
                                 if (downloadAmount == 0)
                                     downloadAmount = int.MaxValue;
+                                break;
+                            case "--cache-size":
+                                i++;
+                                if (i >= args.Length)
+                                {
+                                    Console.Error.WriteLine("--cache-size expects an additional argument.");
+                                    Environment.Exit(1);
+                                }
+                                if (!int.TryParse(args[i], out cacheSize) || cacheSize <= 0)
+                                {
+                                    Console.Error.WriteLine("Cache size must be a valid and strictly positive number.");
+                                    Environment.Exit(1);
+                                }
                                 break;
                             case "--maxres":
                                 maximumRes = true;
@@ -207,6 +221,16 @@ namespace SpotlightDownloader
                                 break;
                         }
                     }
+
+                    if (downloadMany && cacheSize < downloadAmount)
+                    {
+                        Console.Error.WriteLine(
+                            "Download amount ({0}) is greater than cache size ({1}). Reducing download amount to {1}.",
+                            downloadAmount == int.MaxValue ? "MAX" : downloadAmount.ToString(),
+                            cacheSize
+                        );
+                        downloadAmount = cacheSize;
+                    }
                 }
 
                 try
@@ -320,6 +344,20 @@ namespace SpotlightDownloader
                             Environment.Exit(3);
                         }
                     } while (downloadMany && (downloadCount > 0 || noNewImgCount < 50) && downloadAmount > 0);
+                    if (cacheSize < int.MaxValue && cacheSize > 0)
+                    {
+                        foreach (FileInfo imgToDelete in
+                            Directory.GetFiles(outputDir, "*.jpg", SearchOption.TopDirectoryOnly)
+                            .Select(filePath => new FileInfo(filePath))
+                            .OrderByDescending(fileInfo => fileInfo.CreationTime)
+                            .Skip(cacheSize))
+                        {
+                            string metadataFile = Path.Combine(imgToDelete.DirectoryName, Path.GetFileNameWithoutExtension(imgToDelete.Name) + ".txt");
+                            if (File.Exists(metadataFile))
+                                File.Delete(metadataFile);
+                            imgToDelete.Delete();
+                        }
+                    }
                     Environment.Exit(0);
                 }
                 catch (Exception e)
@@ -350,13 +388,14 @@ namespace SpotlightDownloader
                     "  --single           Print only one random url or download only one image as spotlight.jpg",
                     "  --many             Try downloading as much images as possible by calling API many times",
                     "  --amount <n>       Stop downloading after <n> images successfully downloaded, implies --many",
+                    "  --cache-size <n>   Only keep <n> most recent images in the output directory, delete others",
                     "  --maxres           Force maximum image resolution instead of tailoring to current screen res",
                     "  --portrait         Force portrait image instead of autodetecting from current screen res",
                     "  --landscape        Force landscape image instead of autodetecting from current screen res",
                     "  --outdir <dir>     Set output directory instead of defaulting to working directory",
                     "  --outname <name>   Set output file name as <name>.jpg in single image mode, ignored otherwise",
                     "  --skip-integrity   Skip integrity check of downloaded files: file size and sha256 hash",
-                    "  --api-tries <n>    Amount of unsuccessfull API calls before giving up. Default is 3.",
+                    "  --api-tries <n>    Amount of unsuccessful API calls before giving up. Default is 3.",
                     "  --metadata         Also save image metadata such as title & copyright as <image-name>.txt",
                     "  --from-file        Set the specified file as wallpaper/lockscreen instead of downloading",
                     "  --from-dir         Set a random image from the specified directory as wallpaper/lockscreen",
