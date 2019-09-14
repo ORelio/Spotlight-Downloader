@@ -1,6 +1,6 @@
-﻿=====================================================
-==== SpotlightDL v1.4 - By ORelio - Microzoom.fr ====
-=====================================================
+﻿=======================================================
+==== SpotlightDL v1.4.1 - By ORelio - Microzoom.fr ====
+=======================================================
 
 Thanks for dowloading SpotlightDL!
 
@@ -120,6 +120,12 @@ R: Those fields are not provided for all images by the Spotlight API.
 
 Q: I do not want to have the image title inside my wallpaper or lockscreen. How to remove it?
 R: Edit the batch file you want to use and remove --embed-meta inside the corresponding command.
+
+Q: I would like to retrieve metadata/images for a specific language. How to do it?
+R: Edit the batch file you want to use and add --locale en-US or any other locale code
+
+Q: When downloading images using spotlight-download-archive.bat, I get very few images. Why?
+R: This may be related to the current locale set on your computer. Try en-US as decribed above.
 
 +--------------------+
 | © 2018-2019 ORelio |

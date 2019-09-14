@@ -13,7 +13,7 @@ namespace SpotlightDownloader
     class Program
     {
         public const string Name = "SpotlightDL";
-        public const string Version = "1.4";
+        public const string Version = "1.4.1";
 
         static void Main(string[] args)
         {
@@ -23,6 +23,7 @@ namespace SpotlightDownloader
                 bool singleImage = false;
                 bool maximumRes = false;
                 bool? portrait = false;
+                string locale = null;
                 string outputDir = ".";
                 string outputName = "spotlight";
                 bool integrityCheck = true;
@@ -97,6 +98,21 @@ namespace SpotlightDownloader
                                 break;
                             case "--landscape":
                                 portrait = false;
+                                break;
+                            case "--locale":
+                                i++;
+                                if (i < args.Length)
+                                    locale = args[i];
+                                else
+                                {
+                                    Console.Error.WriteLine("--locale expects an additional argument.");
+                                    Environment.Exit(1);
+                                }
+                                if (!System.Text.RegularExpressions.Regex.Match(locale, "^[a-z]{2}-[A-Z]{2}$").Success)
+                                {
+                                    Console.Error.WriteLine("--locale expected format is xx-XX, e.g. en-US.");
+                                    Environment.Exit(1);
+                                }
                                 break;
                             case "--outdir":
                                 i++;
@@ -246,7 +262,7 @@ namespace SpotlightDownloader
                     {
                         SpotlightImage[] images = (fromFile != null && (action == "wallpaper" || action == "lockscreen"))
                             ? new[] { new SpotlightImage() } // Skip API request, we'll use a local file
-                            : Spotlight.GetImageUrls(maximumRes, portrait, apiTryCount);
+                            : Spotlight.GetImageUrls(maximumRes, portrait, locale, apiTryCount);
 
                         if (images.Length < 1)
                         {
@@ -398,12 +414,13 @@ namespace SpotlightDownloader
                     "  --maxres           Force maximum image resolution instead of tailoring to current screen res",
                     "  --portrait         Force portrait image instead of autodetecting from current screen res",
                     "  --landscape        Force landscape image instead of autodetecting from current screen res",
+                    "  --locale <xx-XX>   Force specified locale, e.g. en-US, instead of autodetecting from system",
                     "  --outdir <dir>     Set output directory instead of defaulting to working directory",
                     "  --outname <name>   Set output file name as <name>.ext for --single or --embed-meta",
                     "  --skip-integrity   Skip integrity check of downloaded files: file size and sha256 hash",
                     "  --api-tries <n>    Amount of unsuccessful API calls before giving up. Default is 3.",
                     "  --metadata         Also save image metadata such as title & copyright as <image-name>.txt",
-                    "  --embed-meta       When available, embed metadata into wallpaper or locksceeen image",
+                    "  --embed-meta       When available, embed metadata into wallpaper or lockscreen image",
                     "  --from-file        Set the specified file as wallpaper/lockscreen instead of downloading",
                     "  --from-dir         Set a random image from the specified directory as wallpaper/lockscreen",
                     "  --restore          Restore the default lockscreen image, has no effect with other actions",

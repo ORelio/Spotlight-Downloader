@@ -19,13 +19,20 @@ namespace SpotlightDownloader
         /// Request new images from the Spotlight API and return raw JSON response
         /// </summary>
         /// <param name="maxres">Force maximum image resolution. Otherwise, current image resolution is used</param>
+        /// <param name="locale">Null = Auto detect from current system, or specify xx-XX value format such as en-US</param>
         /// <returns>Raw JSON response</returns>
         /// <exception cref="System.Net.WebException">An exception is thrown if the request fails</exception>
-        private static string PerformApiRequest(bool maxres)
+        private static string PerformApiRequest(bool maxres, string locale = null)
         {
             WebClient webClient = new WebClient();
             CultureInfo currentCulture = CultureInfo.CurrentCulture;
             RegionInfo currentRegion = new RegionInfo(currentCulture.LCID);
+            string region = currentRegion.TwoLetterISORegionName.ToLower();
+
+            if (locale == null)
+                locale = currentCulture.Name;
+            else if (locale.Length > 2 && locale.Contains("-"))
+                region = locale.Split('-')[1].ToLower();
 
             int screenWidth = maxres ? 99999 : Screen.PrimaryScreen.Bounds.Width;
             int screenHeight = maxres ? 99999 : Screen.PrimaryScreen.Bounds.Height;
@@ -35,9 +42,9 @@ namespace SpotlightDownloader
                     +"%2F0&disphorzres={0}&dispvertres={1}&lo=80217&pl={2}&lc={3}&ctry={4}&time={5}",
                     screenWidth,
                     screenHeight,
-                currentCulture.Name,
-                currentCulture.Name,
-                currentRegion.TwoLetterISORegionName.ToLower(),
+                locale,
+                locale,
+                region,
                 DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ssZ")
             );
 
@@ -50,18 +57,19 @@ namespace SpotlightDownloader
         /// </summary>
         /// <param name="maxres">Force maximum image resolution. Otherwise, current main monitor screen resolution is used</param>
         /// <param name="portrait">Null = Auto detect from current main monitor resolution, True = portrait, False = landscape.</param>
+        /// <param name="locale">Null = Auto detect from current system, or specify xx-XX value format such as en-US</param>
         /// <param name="attempts">Amount of API call attempts before raising an exception if an error occurs</param>
         /// <returns>List of images</returns>
         /// <exception cref="System.Net.WebException">An exception is thrown if the request fails</exception>
         /// <exception cref="System.IO.InvalidDataException">An exception is thrown if the JSON data is invalid</exception>
-        public static SpotlightImage[] GetImageUrls(bool maxres = false, bool? portrait = null, int attempts = 1)
+        public static SpotlightImage[] GetImageUrls(bool maxres = false, bool? portrait = null, string locale = null, int attempts = 1)
         {
             while (true)
             {
                 try
                 {
                     attempts--;
-                    return GetImageUrlsSingleAttempt(maxres, portrait);
+                    return GetImageUrlsSingleAttempt(maxres, portrait, locale);
                 }
                 catch (Exception e)
                 {
@@ -80,13 +88,14 @@ namespace SpotlightDownloader
         /// </summary>
         /// <param name="maxres">Force maximum image resolution. Otherwise, current main monitor screen resolution is used</param>
         /// <param name="portrait">Null = Auto detect from current main monitor resolution, True = portrait, False = landscape.</param>
+        /// <param name="locale">Null = Auto detect from current system, or specify xx-XX value format such as en-US</param>
         /// <returns>List of images</returns>
         /// <exception cref="System.Net.WebException">An exception is thrown if the request fails</exception>
         /// <exception cref="System.IO.InvalidDataException">An exception is thrown if the JSON data is invalid</exception>
-        private static SpotlightImage[] GetImageUrlsSingleAttempt(bool maxres = false, bool? portrait = null)
+        private static SpotlightImage[] GetImageUrlsSingleAttempt(bool maxres = false, bool? portrait = null, string locale = null)
         {
             List<SpotlightImage> images = new List<SpotlightImage>();
-            Json.JSONData imageData = Json.ParseJson(PerformApiRequest(maxres));
+            Json.JSONData imageData = Json.ParseJson(PerformApiRequest(maxres, locale));
 
             if (portrait == null)
                 portrait = Screen.PrimaryScreen.Bounds.Height > Screen.PrimaryScreen.Bounds.Width;
@@ -173,7 +182,7 @@ namespace SpotlightDownloader
                     }
                     else throw new InvalidDataException("SpotlightAPI: 'batchrsp/items' field in JSON API response is not an array.");
                 }
-                else throw new InvalidDataException("SpotlightAPI: Missing 'batchrsp/items' field in JSON API response.");
+                else throw new InvalidDataException("SpotlightAPI: Missing 'batchrsp/items' field in JSON API response." + (locale != null ? " Locale '" + locale + "' may be invalid." : ""));
             }
             else throw new InvalidDataException("SpotlightAPI: API did not return a 'batchrsp' JSON object.");
 

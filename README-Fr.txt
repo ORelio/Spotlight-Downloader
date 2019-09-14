@@ -1,6 +1,6 @@
-﻿======================================================
-==== SpotlightDL v1.4 - Par ORelio - Microzoom.fr ====
-======================================================
+﻿========================================================
+==== SpotlightDL v1.4.1 - Par ORelio - Microzoom.fr ====
+========================================================
 
 Merci d'avoir téléchargé SpotlightDL!
 
@@ -122,6 +122,12 @@ R: Ces informations ne sont pas fournies pour toutes les images au niveau de l'A
 
 Q: Je ne veux pas du titre de l'image sur mon fond d'écran ou écran de verrouillage. Comment l'enlever ?
 R: Modifiez le fichier batch que vous utilisez pour enlever le paramètre --embed-meta dans la commande associée.
+
+Q: Je souhaite obtenir les métadonnées/images pour une langue spécifique. Comment faire ?
+R: Modifiez le fichier batch que vous utilisez pour ajouter le paramètre --locale fr-FR ou autre code de langue.
+
+Q: Lorsque je télécharge les images avec spotlight-download-archive.bat, j'en obtiens assez peu. Pourquoi ?
+R: Cela peut être lié à la langue configurée sur votre système. Essayez fr-FR comme décrit ci-dessus.
 
 +--------------------+
 | © 2018-2019 ORelio |
