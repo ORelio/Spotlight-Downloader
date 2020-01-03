@@ -26,8 +26,6 @@ namespace SpotlightDownloader
         /// Get Metadata file location from JPG file location
         /// </summary>
         /// <param name="imagePath">Image file location</param>
-        /// <exception cref="System.IO.IOException">Thrown if an error occurs when accessing the specified file</exception>
-        /// <exception cref="System.IO.InvalidDataException">Thrown if the specified file is not a valid metadata file</exception>
         /// <returns>Metadata file location</returns>
         public static string GetMetaLocation(string imagePath)
         {
@@ -38,6 +36,8 @@ namespace SpotlightDownloader
         /// Load a SpotlightImage object from a Metatada file
         /// </summary>
         /// <param name="metadataFile">File to load information from</param>
+        /// <exception cref="System.IO.IOException">Thrown if an error occurs when accessing the specified file</exception>
+        /// <exception cref="System.IO.InvalidDataException">Thrown if the specified file is not a valid metadata file</exception>
         /// <returns>SpotlightImage object</returns>
         public static SpotlightImage LoadMeta(string metadataFile)
         {

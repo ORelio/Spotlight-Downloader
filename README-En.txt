@@ -1,5 +1,5 @@
 ﻿=======================================================
-==== SpotlightDL v1.4.1 - By ORelio - Microzoom.fr ====
+==== SpotlightDL v1.4.2 - By ORelio - Microzoom.fr ====
 =======================================================
 
 Thanks for dowloading SpotlightDL!
@@ -110,7 +110,7 @@ Click OK to save your task.
 =====
 
 Q: The lockscreen does not appear when I am logged on?
-R: Make sure the image is also seleted in your personal lock screen settings.
+R: Make sure the image is also selected in your personal lock screen settings.
 
 Q: How many images are downloaded when using default mode? (i.e. without using --single or --many)
 R: Default mode downloads a list of images returned by a single API call: previously 6-7, currently only 1.
@@ -128,5 +128,5 @@ Q: When downloading images using spotlight-download-archive.bat, I get very few 
 R: This may be related to the current locale set on your computer. Try en-US as decribed above.
 
 +--------------------+
-| © 2018-2019 ORelio |
+| © 2018-2020 ORelio |
 +--------------------+

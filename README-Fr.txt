@@ -1,5 +1,5 @@
 ﻿========================================================
-==== SpotlightDL v1.4.1 - Par ORelio - Microzoom.fr ====
+==== SpotlightDL v1.4.2 - Par ORelio - Microzoom.fr ====
 ========================================================
 
 Merci d'avoir téléchargé SpotlightDL!
@@ -130,5 +130,5 @@ Q: Lorsque je télécharge les images avec spotlight-download-archive.bat, j'en 
 R: Cela peut être lié à la langue configurée sur votre système. Essayez fr-FR comme décrit ci-dessus.
 
 +--------------------+
-| © 2018-2019 ORelio |
+| © 2018-2020 ORelio |
 +--------------------+
