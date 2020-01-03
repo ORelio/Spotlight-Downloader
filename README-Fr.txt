@@ -129,6 +129,12 @@ R: Modifiez le fichier batch que vous utilisez pour ajouter le paramètre --loca
 Q: Lorsque je télécharge les images avec spotlight-download-archive.bat, j'en obtiens assez peu. Pourquoi ?
 R: Cela peut être lié à la langue configurée sur votre système. Essayez fr-FR comme décrit ci-dessus.
 
+Q: Est-ce que SpotlightDL consomme des données sur les réseaux que j'ai définis en connexions limitées ?
+R: Non, dans ce cas les fichiers batch réutilisent les images déjà en cache, sauf spotlight-download-archive.
+
+Q: Comment activer le téléchargement d'images sur les connexions limitées ?
+R: Modifiez le fichier batch que vous utilisez pour supprimer entièrement la ligne contenant "check-metered.ps1"
+
 +--------------------+
 | © 2018-2020 ORelio |
 +--------------------+

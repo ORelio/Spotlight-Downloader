@@ -127,6 +127,12 @@ R: Edit the batch file you want to use and add --locale en-US or any other local
 Q: When downloading images using spotlight-download-archive.bat, I get very few images. Why?
 R: This may be related to the current locale set on your computer. Try en-US as decribed above.
 
+Q: Does SpotlightDL consume bandwidth on networks that I defined as metered?
+R: No. Batch files will reuse previously downloaded images, except spotlight-download-archive.
+
+Q: How to enable image download on metered networks?
+R: Edit the batch file you want to use and remove the whole line containing "check-metered.ps1"
+
 +--------------------+
 | © 2018-2020 ORelio |
 +--------------------+
