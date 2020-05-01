@@ -1,5 +1,5 @@
 ﻿========================================================
-==== SpotlightDL v1.4.2 - Par ORelio - Microzoom.fr ====
+==== SpotlightDL v1.4.3 - Par ORelio - Microzoom.fr ====
 ========================================================
 
 Merci d'avoir téléchargé SpotlightDL!
@@ -128,6 +128,9 @@ R: Modifiez le fichier batch que vous utilisez pour ajouter le paramètre --loca
 
 Q: Lorsque je télécharge les images avec spotlight-download-archive.bat, j'en obtiens assez peu. Pourquoi ?
 R: Cela peut être lié à la langue configurée sur votre système. Essayez fr-FR comme décrit ci-dessus.
+
+Q: Comment télécharger plus d'images en essayant toutes les langues ? Je n'ai pas besoin d'avoir les metadonnées.
+R: Modifiez spotlight-download-archive.bat pour remplacer --metadata par --all-locales dans la commande adéquate.
 
 Q: Est-ce que SpotlightDL consomme des données sur les réseaux que j'ai définis en connexions limitées ?
 R: Non, dans ce cas les fichiers batch réutilisent les images déjà en cache, sauf spotlight-download-archive.

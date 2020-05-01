@@ -71,6 +71,7 @@
     <Compile Include="FileSystemAdmin.cs" />
     <Compile Include="ImageEncoder.cs" />
     <Compile Include="Json.cs" />
+    <Compile Include="Locales.cs" />
     <Compile Include="Lockscreen.cs" />
     <Compile Include="Privilege20\NativeMethods.cs" />
     <Compile Include="Privilege20\Privilege.cs" />

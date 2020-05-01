@@ -13,7 +13,7 @@ namespace SpotlightDownloader
     class Program
     {
         public const string Name = "SpotlightDL";
-        public const string Version = "1.4.2";
+        public const string Version = "1.4.3";
 
         static void Main(string[] args)
         {
@@ -24,6 +24,7 @@ namespace SpotlightDownloader
                 bool maximumRes = false;
                 bool? portrait = false;
                 string locale = null;
+                bool allLocales = false;
                 string outputDir = ".";
                 string outputName = "spotlight";
                 bool integrityCheck = true;
@@ -31,9 +32,11 @@ namespace SpotlightDownloader
                 int downloadAmount = int.MaxValue;
                 int cacheSize = int.MaxValue;
                 bool metadata = false;
+                bool metadataAllowInconsistent = false;
                 bool embedMetadata = false;
                 string fromFile = null;
                 int apiTryCount = 3;
+                bool verbose = false;
 
                 switch (args[0].ToLower())
                 {
@@ -114,6 +117,10 @@ namespace SpotlightDownloader
                                     Environment.Exit(1);
                                 }
                                 break;
+                            case "--all-locales":
+                                allLocales = true;
+                                downloadMany = true;
+                                break;
                             case "--outdir":
                                 i++;
                                 if (i < args.Length)
@@ -165,6 +172,10 @@ namespace SpotlightDownloader
                                 break;
                             case "--metadata":
                                 metadata = true;
+                                break;
+                            case "--inconsistent-metadata":
+                                metadata = true;
+                                metadataAllowInconsistent = true;
                                 break;
                             case "--embed-meta":
                                 embedMetadata = true;
@@ -235,6 +246,9 @@ namespace SpotlightDownloader
                                     }
                                 }
                                 break;
+                            case "--verbose":
+                                verbose = true;
+                                break;
                             default:
                                 Console.Error.WriteLine("Unknown argument: " + args[i]);
                                 Environment.Exit(1);
@@ -251,10 +265,27 @@ namespace SpotlightDownloader
                         );
                         downloadAmount = cacheSize;
                     }
+
+                    if (downloadMany && metadata && allLocales && !metadataAllowInconsistent)
+                    {
+                        Console.Error.WriteLine("--metadata combined with --all-locales will produce random metadata languages.");
+                        Console.Error.WriteLine("Please relaunch with --inconsistent-metadata if you really intend to do this.");
+                        Environment.Exit(1);
+                    }
                 }
 
                 try
                 {
+                    Queue<string> remainingLocales = new Queue<string>();
+
+                    if (allLocales)
+                    {
+                        remainingLocales = new Queue<string>(Locales.AllKnownSpotlightLocales);
+                        Console.Error.WriteLine(String.Format("Starting download using {0} locales", remainingLocales.Count));
+                        locale = remainingLocales.Dequeue();
+                        Console.Error.WriteLine(String.Format("Switching to {0} - {1} locales remaining", locale, remainingLocales.Count + 1));
+                    }
+
                     int downloadCount = 0;
                     int noNewImgCount = 0;
 
@@ -353,8 +384,11 @@ namespace SpotlightDownloader
                                 }
                             }
 
-                            Console.Error.WriteLine("Successfully downloaded: " + downloadCount + " images.");
-                            Console.Error.WriteLine("Already downloaded: " + (images.Length - downloadCount) + " images.");
+                            if (verbose)
+                            {
+                                Console.Error.WriteLine("Successfully downloaded: " + downloadCount + " images.");
+                                Console.Error.WriteLine("Already downloaded: " + (images.Length - downloadCount) + " images.");
+                            }
 
                             if (downloadCount == 0)
                                 noNewImgCount++;
@@ -365,7 +399,16 @@ namespace SpotlightDownloader
                             Console.Error.WriteLine(e.GetType() + ": " + e.Message);
                             Environment.Exit(3);
                         }
+
+                        if (allLocales && noNewImgCount >= 50 && remainingLocales.Count > 0)
+                        {
+                            noNewImgCount = 0;
+                            locale = remainingLocales.Dequeue();
+                            Console.Error.WriteLine(String.Format("Switching to {0} - {1} locales remaining", locale, remainingLocales.Count + 1));
+                        }
+
                     } while (downloadMany && (downloadCount > 0 || noNewImgCount < 50) && downloadAmount > 0);
+
                     if (cacheSize < int.MaxValue && cacheSize > 0)
                     {
                         foreach (FileInfo imgToDelete in
@@ -380,6 +423,7 @@ namespace SpotlightDownloader
                             imgToDelete.Delete();
                         }
                     }
+
                     Environment.Exit(0);
                 }
                 catch (Exception e)
@@ -415,6 +459,7 @@ namespace SpotlightDownloader
                     "  --portrait         Force portrait image instead of autodetecting from current screen res",
                     "  --landscape        Force landscape image instead of autodetecting from current screen res",
                     "  --locale <xx-XX>   Force specified locale, e.g. en-US, instead of autodetecting from system",
+                    "  --all-locales      Attempt to download images for all known Spotlight locales, implies --many",
                     "  --outdir <dir>     Set output directory instead of defaulting to working directory",
                     "  --outname <name>   Set output file name as <name>.ext for --single or --embed-meta",
                     "  --skip-integrity   Skip integrity check of downloaded files: file size and sha256 hash",
@@ -424,6 +469,7 @@ namespace SpotlightDownloader
                     "  --from-file        Set the specified file as wallpaper/lockscreen instead of downloading",
                     "  --from-dir         Set a random image from the specified directory as wallpaper/lockscreen",
                     "  --restore          Restore the default lockscreen image, has no effect with other actions",
+                    "  --verbose          Display additional status messages while downloading images from API",
                     "",
                     "Exit codes:",
                     "  0                  Success",
