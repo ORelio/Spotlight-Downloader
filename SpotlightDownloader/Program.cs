@@ -13,7 +13,7 @@ namespace SpotlightDownloader
     class Program
     {
         public const string Name = "SpotlightDL";
-        public const string Version = "1.4.3";
+        public const string Version = "1.4.3-r1";
 
         static void Main(string[] args)
         {
@@ -291,61 +291,49 @@ namespace SpotlightDownloader
 
                     do
                     {
-                        SpotlightImage[] images = (fromFile != null && (action == "wallpaper" || action == "lockscreen"))
-                            ? new[] { new SpotlightImage() } // Skip API request, we'll use a local file
-                            : Spotlight.GetImageUrls(maximumRes, portrait, locale, apiTryCount);
-
-                        if (images.Length < 1)
-                        {
-                            Console.Error.WriteLine(Program.Name + " received an empty image set from Spotlight API.");
-                            Environment.Exit(2);
-                        }
-
-                        SpotlightImage randomImage = images.OrderBy(p => new Guid()).First();
-
-                        if (action == "urls")
-                        {
-                            if (singleImage)
-                            {
-                                Console.WriteLine(randomImage.Uri);
-                            }
-                            else
-                            {
-                                foreach (SpotlightImage image in images)
-                                {
-                                    Console.WriteLine(image.Uri);
-                                }
-                            }
-                            Environment.Exit(0);
-                        }
-
                         try
                         {
-                            if (singleImage || action == "wallpaper" || action == "lockscreen")
+                            SpotlightImage[] images = (fromFile != null && (action == "wallpaper" || action == "lockscreen"))
+                                ? new[] { new SpotlightImage() } // Skip API request, we'll use a local file
+                                : Spotlight.GetImageUrls(maximumRes, portrait, locale, apiTryCount);
+
+                            if (images.Length < 1)
                             {
-                                string imageFile = fromFile ?? randomImage.DownloadToFile(outputDir, integrityCheck, metadata, outputName, apiTryCount);
-                                if (embedMetadata)
-                                    imageFile = SpotlightImage.EmbedMetadata(imageFile, outputDir, outputName);
-                                Console.WriteLine(imageFile);
-                                if (action == "wallpaper")
+                                Console.Error.WriteLine(Program.Name + " received an empty image set from Spotlight API.");
+                                Environment.Exit(2);
+                            }
+
+                            SpotlightImage randomImage = images.OrderBy(p => new Guid()).First();
+
+                            if (action == "urls")
+                            {
+                                if (singleImage)
                                 {
-                                    try
+                                    Console.WriteLine(randomImage.Uri);
+                                }
+                                else
+                                {
+                                    foreach (SpotlightImage image in images)
                                     {
-                                        Desktop.SetWallpaper(imageFile);
-                                    }
-                                    catch (Exception e)
-                                    {
-                                        Console.Error.WriteLine(e.GetType() + ": " + e.Message);
-                                        Environment.Exit(4);
+                                        Console.WriteLine(image.Uri);
                                     }
                                 }
-                                else if (action == "lockscreen")
+                                Environment.Exit(0);
+                            }
+
+                            try
+                            {
+                                if (singleImage || action == "wallpaper" || action == "lockscreen")
                                 {
-                                    if (FileSystemAdmin.IsAdmin())
+                                    string imageFile = fromFile ?? randomImage.DownloadToFile(outputDir, integrityCheck, metadata, outputName, apiTryCount);
+                                    if (embedMetadata)
+                                        imageFile = SpotlightImage.EmbedMetadata(imageFile, outputDir, outputName);
+                                    Console.WriteLine(imageFile);
+                                    if (action == "wallpaper")
                                     {
                                         try
                                         {
-                                            Lockscreen.SetGlobalLockscreen(imageFile);
+                                            Desktop.SetWallpaper(imageFile);
                                         }
                                         catch (Exception e)
                                         {
@@ -353,51 +341,75 @@ namespace SpotlightDownloader
                                             Environment.Exit(4);
                                         }
                                     }
-                                    else
+                                    else if (action == "lockscreen")
                                     {
-                                        Console.Error.WriteLine("This program must run as administrator to change the global lockscreen.");
-                                        Environment.Exit(4);
+                                        if (FileSystemAdmin.IsAdmin())
+                                        {
+                                            try
+                                            {
+                                                Lockscreen.SetGlobalLockscreen(imageFile);
+                                            }
+                                            catch (Exception e)
+                                            {
+                                                Console.Error.WriteLine(e.GetType() + ": " + e.Message);
+                                                Environment.Exit(4);
+                                            }
+                                        }
+                                        else
+                                        {
+                                            Console.Error.WriteLine("This program must run as administrator to change the global lockscreen.");
+                                            Environment.Exit(4);
+                                        }
                                     }
+                                    Environment.Exit(0);
                                 }
-                                Environment.Exit(0);
-                            }
 
-                            downloadCount = 0;
+                                downloadCount = 0;
 
-                            foreach (SpotlightImage image in images)
-                            {
-                                string imagePath = image.GetFilePath(outputDir);
-                                if (!File.Exists(imagePath))
+                                foreach (SpotlightImage image in images)
                                 {
-                                    try
+                                    string imagePath = image.GetFilePath(outputDir);
+                                    if (!File.Exists(imagePath))
                                     {
-                                        Console.WriteLine(image.DownloadToFile(outputDir, integrityCheck, metadata, null, apiTryCount));
-                                        downloadCount++;
-                                        downloadAmount--;
-                                        if (downloadAmount <= 0)
-                                            break;
-                                    }
-                                    catch (InvalidDataException)
-                                    {
-                                        Console.Error.WriteLine("Skipping invalid image: " + image.Uri);
+                                        try
+                                        {
+                                            Console.WriteLine(image.DownloadToFile(outputDir, integrityCheck, metadata, null, apiTryCount));
+                                            downloadCount++;
+                                            downloadAmount--;
+                                            if (downloadAmount <= 0)
+                                                break;
+                                        }
+                                        catch (InvalidDataException)
+                                        {
+                                            Console.Error.WriteLine("Skipping invalid image: " + image.Uri);
+                                        }
                                     }
                                 }
-                            }
 
-                            if (verbose)
+                                if (verbose)
+                                {
+                                    Console.Error.WriteLine("Successfully downloaded: " + downloadCount + " images.");
+                                    Console.Error.WriteLine("Already downloaded: " + (images.Length - downloadCount) + " images.");
+                                }
+
+                                if (downloadCount == 0)
+                                    noNewImgCount++;
+                                else noNewImgCount = 0;
+                            }
+                            catch (Exception e)
                             {
-                                Console.Error.WriteLine("Successfully downloaded: " + downloadCount + " images.");
-                                Console.Error.WriteLine("Already downloaded: " + (images.Length - downloadCount) + " images.");
+                                Console.Error.WriteLine(e.GetType() + ": " + e.Message);
+                                Environment.Exit(3);
                             }
-
-                            if (downloadCount == 0)
-                                noNewImgCount++;
-                            else noNewImgCount = 0;
                         }
-                        catch (Exception e)
+                        catch (Exception)
                         {
-                            Console.Error.WriteLine(e.GetType() + ": " + e.Message);
-                            Environment.Exit(3);
+                            if (allLocales && remainingLocales.Count > 0)
+                            {
+                                // Force switch to next locale
+                                noNewImgCount = int.MaxValue;
+                            }
+                            else throw;
                         }
 
                         if (allLocales && noNewImgCount >= 50 && remainingLocales.Count > 0)

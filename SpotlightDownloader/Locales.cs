@@ -265,7 +265,6 @@ namespace SpotlightDownloader
             "mn-MN",
             "mr-IN",
             "ms-BN",
-            "ms-MY",
             "mt-MT",
             "nb-NO",
             "nb-SJ",
