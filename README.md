@@ -36,7 +36,7 @@ The Spotlight API is located on the following endpoint:
 `https://arc.msn.com/v3/Delivery/Cache?pid=209567&fmt=json&rafb=0&ua=WindowsShellClient%2F0&disphorzres=9999&dispvertres=9999&lo=80217&pl=en-US&lc=en-US&ctry=us&time=2017-12-31T23:59:59Z`
 
 Where the expected arguments are:
- - `pid` : Purpose currently unknown
+ - `pid` : Public subscription ID for Windows lockscreens. Do not change this value
  - `fmt` : Output format, e.g. `json`
  - `ua` : Client user agent string
  - `disphorzres`: Screen width in pixels
