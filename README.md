@@ -38,9 +38,11 @@ The Spotlight API is located on the following endpoint:
 Where the expected arguments are:
  - `pid` : Public subscription ID for Windows lockscreens. Do not change this value
  - `fmt` : Output format, e.g. `json`
+ - `rafb` : Purpose currently unknown, optional
  - `ua` : Client user agent string
  - `disphorzres`: Screen width in pixels
  - `dispvertres`: Screen height in pixels
+ - `lo` : Purpose currently uknown, optional
  - `pl` : Locale, e.g. `en-US`
  - `lc` : Language, e.g. `en-US`
  - `ctry` : Country, e.g. `us`
