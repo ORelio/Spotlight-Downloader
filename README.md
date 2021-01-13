@@ -33,7 +33,7 @@ you can schedule one of the provided script by following [these instructions](RE
 
 The Spotlight API is located on the following endpoint:
 
-`https://arc.msn.com/v3/Delivery/Cache?pid=209567&fmt=json&rafb=0&ua=WindowsShellClient%2F0&disphorzres=9999&dispvertres=9999&lo=80217&pl=en-US&lc=en-US&ctry=us&time=2017-12-31T23:59:59Z`
+`https://arc.msn.com/v3/Delivery/Placement?pid=209567&fmt=json&rafb=0&ua=WindowsShellClient%2F0&cdm=1&disphorzres=9999&dispvertres=9999&lo=80217&pl=en-US&lc=en-US&ctry=us&time=2017-12-31T23:59:59Z`
 
 Where the expected arguments are:
  - `pid` : Public subscription ID for Windows lockscreens. Do not change this value
