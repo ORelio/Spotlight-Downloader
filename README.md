@@ -40,6 +40,7 @@ Where the expected arguments are:
  - `fmt` : Output format, e.g. `json`
  - `rafb` : Purpose currently unknown, optional
  - `ua` : Client user agent string
+ - `cdm` : Purpose currently unknown, `cdm=1`
  - `disphorzres`: Screen width in pixels
  - `dispvertres`: Screen height in pixels
  - `lo` : Purpose currently uknown, optional
@@ -50,7 +51,7 @@ Where the expected arguments are:
 
 The JSON response contains details for one or more image(s) including image url, title, sha256, ads, etc.
 
-Spotlight API URL was originally found in this [file](https://github.com/KoalaBR/spotlight/blob/3164a43684dcadb751ce9a38db59f29453acf2fe/spotlightprovider.cpp#L17), thanks to the author for their findings!
+Spotlight API URL was originally found in this [file](https://github.com/KoalaBR/spotlight/blob/3164a43684dcadb751ce9a38db59f29453acf2fe/spotlightprovider.cpp#L17) and up to date API URL in this [file](https://github.com/Biswa96/WinLight/blob/master/Developers.md), thanks to the authors for their findings!
 
 ## Global lock screen
 

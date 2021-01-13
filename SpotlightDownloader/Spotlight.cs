@@ -38,8 +38,8 @@ namespace SpotlightDownloader
             int screenHeight = maxres ? 99999 : Screen.PrimaryScreen.Bounds.Height;
 
             string request = String.Format(
-                "https://arc.msn.com/v3/Delivery/Cache?pid=338387&fmt=json&ua=WindowsShellClient"
-                    +"%2F0&disphorzres={0}&dispvertres={1}&pl={2}&lc={3}&ctry={4}&time={5}",
+                "https://arc.msn.com/v3/Delivery/Placement?pid=338387&fmt=json&ua=WindowsShellClient"
+                    + "%2F0&cdm=1&disphorzres={0}&dispvertres={1}&pl={2}&lc={3}&ctry={4}&time={5}",
                     screenWidth,
                     screenHeight,
                 locale,

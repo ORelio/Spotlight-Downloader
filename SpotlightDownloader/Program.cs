@@ -8,12 +8,12 @@ using System.Collections.Generic;
 namespace SpotlightDownloader
 {
     /// <summary>
-    /// Download Microsoft Spotlight images - By ORelio (c) 2018-2020 - CDDL 1.0
+    /// Download Microsoft Spotlight images - By ORelio (c) 2018-2021 - CDDL 1.0
     /// </summary>
     class Program
     {
         public const string Name = "SpotlightDL";
-        public const string Version = "1.4.3-r1";
+        public const string Version = "1.4.4";
 
         static void Main(string[] args)
         {

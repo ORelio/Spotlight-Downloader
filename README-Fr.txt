@@ -1,5 +1,5 @@
 ﻿========================================================
-==== SpotlightDL v1.4.3 - Par ORelio - Microzoom.fr ====
+==== SpotlightDL v1.4.4 - Par ORelio - Microzoom.fr ====
 ========================================================
 
 Merci d'avoir téléchargé SpotlightDL!
@@ -139,5 +139,5 @@ Q: Comment activer le téléchargement d'images sur les connexions limitées ?
 R: Modifiez le fichier batch que vous utilisez pour supprimer entièrement la ligne contenant "check-metered.ps1"
 
 +--------------------+
-| © 2018-2020 ORelio |
+| © 2018-2021 ORelio |
 +--------------------+

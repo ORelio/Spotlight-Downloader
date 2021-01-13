@@ -1,5 +1,5 @@
 ﻿=======================================================
-==== SpotlightDL v1.4.3 - By ORelio - Microzoom.fr ====
+==== SpotlightDL v1.4.4 - By ORelio - Microzoom.fr ====
 =======================================================
 
 Thanks for dowloading SpotlightDL!
@@ -137,5 +137,5 @@ Q: How to enable image download on metered networks?
 R: Edit the batch file you want to use and remove the whole line containing "check-metered.ps1"
 
 +--------------------+
-| © 2018-2020 ORelio |
+| © 2018-2021 ORelio |
 +--------------------+
