@@ -13,10 +13,13 @@ namespace SpotlightDownloader
     class Program
     {
         public const string Name = "SpotlightDL";
-        public const string Version = "1.4.4";
+        public const string Version = "1.4.5";
 
         static void Main(string[] args)
         {
+            //Configure System.Net to use TLS 1.2 - disabled by default for .NET 4.0 - Stackoverflow 33761919 - Issue #22
+            System.Net.ServicePointManager.SecurityProtocol = (System.Net.SecurityProtocolType)3072; //Tls12
+
             if (args.Length > 0)
             {
                 string action = null;

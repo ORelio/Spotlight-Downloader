@@ -1,5 +1,5 @@
 ﻿=======================================================
-==== SpotlightDL v1.4.4 - By ORelio - Microzoom.fr ====
+==== SpotlightDL v1.4.5 - By ORelio - Microzoom.fr ====
 =======================================================
 
 Thanks for dowloading SpotlightDL!

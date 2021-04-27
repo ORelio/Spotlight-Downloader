@@ -43,7 +43,7 @@ Where the expected arguments are:
  - `cdm` : Purpose currently unknown, `cdm=1`
  - `disphorzres`: Screen width in pixels
  - `dispvertres`: Screen height in pixels
- - `lo` : Purpose currently uknown, optional
+ - `lo` : Purpose currently unknown, optional
  - `pl` : Locale, e.g. `en-US`
  - `lc` : Language, e.g. `en-US`
  - `ctry` : Country, e.g. `us`
