@@ -116,8 +116,7 @@ namespace SpotlightDownloader
                                 }
                                 if (!System.Text.RegularExpressions.Regex.Match(locale, "^[a-z]{2}-[A-Z]{2}$").Success)
                                 {
-                                    Console.Error.WriteLine("--locale expected format is xx-XX, e.g. en-US.");
-                                    Environment.Exit(1);
+                                    Console.Error.WriteLine("--locale expected format is xx-XX, e.g. en-US. Locale '{0}' might not work.", locale);
                                 }
                                 break;
                             case "--all-locales":
