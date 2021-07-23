@@ -26,7 +26,7 @@ namespace SpotlightDownloader
         {
             WebClient webClient = new WebClient();
             CultureInfo currentCulture = CultureInfo.CurrentCulture;
-            RegionInfo currentRegion = new RegionInfo(currentCulture.LCID);
+            RegionInfo currentRegion = new RegionInfo(currentCulture.Name);
             string region = currentRegion.TwoLetterISORegionName.ToLower();
 
             if (locale == null)
