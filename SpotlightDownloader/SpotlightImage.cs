@@ -18,7 +18,8 @@ namespace SpotlightDownloader
 
         public string Uri { get; set; }
         public string Sha256 { get; set; }
-        public int FileSize { get; set; }
+        public int? FileSize { get; set; }
+        public string FileName { get; set; }
         public string Title { get; set; }
         public string Copyright { get; set; }
 
@@ -67,6 +68,9 @@ namespace SpotlightDownloader
                                 if (int.TryParse(value, out fileSize))
                                     image.FileSize = fileSize;
                                 break;
+                            case "filename":
+                                image.FileName = value;
+                                break;
                             case "title":
                                 image.Title = value;
                                 break;
@@ -85,20 +89,42 @@ namespace SpotlightDownloader
         /// Get image path to which the image will be downloaded
         /// </summary>
         /// <param name="outputDir">Output directory</param>
-        /// <param name="outputName">Specify output file name, or let SpotlightImage generate Guid from sha256 hash</param>
+        /// <param name="outputName">Specify output file name, or let SpotlightImage choose a file name</param>
         /// <param name="extension">File extension, defaults to .jpg since image is a JPEG file</param>
+        /// <remarks>
+        /// File name depends on data provided by Spotlight API
+        /// Api v3 returns a hash => Compute Guid from sha256 hash
+        /// Api v4 returns a file name or resource ID in URL => Use that as file name
+        /// </remarks>
         /// <returns>Image path on disk</returns>
-        public string GetFilePath(string outputDir, string outputName = null, string extension = ".jpg")
+        public string GetFilePath(string outputDir, string outputName = null, string extension = null)
         {
             if (outputName == null)
             {
-                byte[] sha256 = System.Convert.FromBase64String(Sha256);
-                byte[] guid = new byte[16];
-                for (int i = 0; i < guid.Length && i < sha256.Length; i++)
-                    guid[i] = sha256[i];
-                outputName = new Guid(guid).ToString();
+                if (FileName == null)
+                {
+                    byte[] sha256 = System.Convert.FromBase64String(Sha256);
+                    byte[] guid = new byte[16];
+                    for (int i = 0; i < guid.Length && i < sha256.Length; i++)
+                        guid[i] = sha256[i];
+                    outputName = new Guid(guid).ToString();
+                }
+                else
+                {
+                    outputName = Path.GetFileNameWithoutExtension(FileName);
+                    if (extension == null)
+                    {
+                        string extensionTmp = Path.GetExtension(FileName);
+                        if (!String.IsNullOrEmpty(extensionTmp))
+                            extension = extensionTmp;
+                    }
+                }
             }
-            return outputDir + Path.DirectorySeparatorChar + outputName + extension;
+
+            if (extension == null)
+                extension = ".jpg";
+
+            return Path.Combine(outputDir, outputName + extension);
         }
 
         /// <summary>
@@ -147,25 +173,42 @@ namespace SpotlightDownloader
         /// <returns>Output file path</returns>
         private string DownloadToFileSingleAttempt(string outputDir, bool integrityCheck = true, bool metadata = false, string outputName = null)
         {
-            string outputFile = GetFilePath(outputDir, outputName, ".jpg");
+            string outputFile = GetFilePath(outputDir, outputName);
 
             (new WebClient()).DownloadFile(Uri, outputFile);
 
             if (integrityCheck)
             {
-                if (new FileInfo(outputFile).Length != FileSize)
+                if (FileSize != null && new FileInfo(outputFile).Length != FileSize.Value)
                 {
                     File.Delete(outputFile);
-                    throw new InvalidDataException("SpotlightImage: File returned by server does not have the expected size: " + Uri + " - Expected size: " + FileSize);
+                    throw new InvalidDataException("SpotlightImage: File returned by server does not have the expected size: " + Uri + " - Expected size: " + FileSize.Value);
                 }
-                using (FileStream fileStream = File.OpenRead(outputFile))
+                if (Sha256 != null)
                 {
-                    byte[] hash = (new SHA256Managed()).ComputeHash(fileStream);
-                    string hashString = Convert.ToBase64String(hash);
-                    if (hashString != Sha256)
+                    using (FileStream fileStream = File.OpenRead(outputFile))
                     {
-                        File.Delete(outputFile);
-                        throw new InvalidDataException("SpotlightImage: File returned by server does not have the expected sha256 hash: " + Uri + " - Expected Hash: " + Sha256);
+                        byte[] hash = (new SHA256Managed()).ComputeHash(fileStream);
+                        string hashString = Convert.ToBase64String(hash);
+                        if (hashString != Sha256)
+                        {
+                            File.Delete(outputFile);
+                            throw new InvalidDataException("SpotlightImage: File returned by server does not have the expected sha256 hash: " + Uri + " - Expected Hash: " + Sha256);
+                        }
+                    }
+                }
+                if (FileSize == null || Sha256 == null)
+                {
+                    try
+                    {
+                        using (Image newImage = Image.FromFile(outputFile))
+                        {
+                            // Seems like the image is valid since there was no exception loading it
+                        }
+                    }
+                    catch (Exception e)
+                    {
+                        throw new InvalidDataException("SpotlightImage: File returned by server does not seems to be a valid image: " + Uri + " - " + e.GetType() + ": " + e.Message);
                     }
                 }
             }
@@ -178,6 +221,7 @@ namespace SpotlightDownloader
                     "uri=" + Uri,
                     "sha256=" + Sha256,
                     "filesize=" + FileSize,
+                    "filename=" + FileName,
                     "title=" + Title,
                     "copyright=" + Copyright
                 }, Encoding.UTF8);

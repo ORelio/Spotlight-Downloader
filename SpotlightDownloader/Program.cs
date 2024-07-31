@@ -20,7 +20,7 @@ namespace SpotlightDownloader
             //Configure System.Net to use TLS 1.2 - disabled by default for .NET 4.0 - Stackoverflow 33761919 - Issue #22
             System.Net.ServicePointManager.SecurityProtocol = (System.Net.SecurityProtocolType)3072; //Tls12
 
-            if (args.Length > 0)
+            if (args.Length > 0 && !args.Contains("--help"))
             {
                 string action = null;
                 bool singleImage = false;
@@ -39,6 +39,7 @@ namespace SpotlightDownloader
                 bool embedMetadata = false;
                 string fromFile = null;
                 int apiTryCount = 3;
+                Spotlight.ApiVersion apiVersion = Spotlight.ApiVersion.v4;
                 bool verbose = false;
 
                 switch (args[0].ToLower())
@@ -156,9 +157,6 @@ namespace SpotlightDownloader
                                     }
                                 }
                                 break;
-                            case "--skip-integrity":
-                                integrityCheck = false;
-                                break;
                             case "--api-tries":
                                 i++;
                                 if (i >= args.Length)
@@ -171,6 +169,24 @@ namespace SpotlightDownloader
                                     Console.Error.WriteLine("API tries must be a valid and strictly positive number.");
                                     Environment.Exit(1);
                                 }
+                                break;
+                            case "--api-version":
+                                i++;
+                                if (i >= args.Length)
+                                {
+                                    Console.Error.WriteLine("--api-version expects an additional argument.");
+                                    Environment.Exit(1);
+                                }
+                                int apiVerInt;
+                                if (!int.TryParse(args[i], out apiVerInt) || apiVerInt < 3 || apiVerInt > 4)
+                                {
+                                    Console.Error.WriteLine("Must set a supported API version: 3 or 4");
+                                    Environment.Exit(1);
+                                }
+                                apiVersion = apiVerInt == 3 ? Spotlight.ApiVersion.v3 : Spotlight.ApiVersion.v4;
+                                break;
+                            case "--skip-integrity":
+                                integrityCheck = false;
                                 break;
                             case "--metadata":
                                 metadata = true;
@@ -297,7 +313,7 @@ namespace SpotlightDownloader
                         {
                             SpotlightImage[] images = (fromFile != null && (action == "wallpaper" || action == "lockscreen"))
                                 ? new[] { new SpotlightImage() } // Skip API request, we'll use a local file
-                                : Spotlight.GetImageUrls(maximumRes, portrait, locale, apiTryCount);
+                                : Spotlight.GetImageUrls(maximumRes, portrait, locale, apiTryCount, apiVersion);
 
                             if (images.Length < 1)
                             {
@@ -459,38 +475,40 @@ namespace SpotlightDownloader
                     "  Then, provide any number of arguments from the list below.",
                     "",
                     "Actions:",
-                    "  urls               Query Spotlight API and print image URLs to standard output",
-                    "  download           Download all images and print file path to standard output",
-                    "  wallpaper          Download one random image and define it as wallpaper",
-                    "  lockscreen         Download one random image and define it as global lockscreen",
+                    "  urls                Query Spotlight API and print image URLs to standard output",
+                    "  download            Download all images and print file path to standard output",
+                    "  wallpaper           Download one random image and define it as wallpaper",
+                    "  lockscreen          Download one random image and define it as global lockscreen",
                     "",
                     "Arguments:",
-                    "  --single           Print only one random url or download only one image as spotlight.jpg",
-                    "  --many             Try downloading as much images as possible by calling API many times",
-                    "  --amount <n>       Stop downloading after <n> images successfully downloaded, implies --many",
-                    "  --cache-size <n>   Only keep <n> most recent images in the output directory, delete others",
-                    "  --maxres           Force maximum image resolution instead of tailoring to current screen res",
-                    "  --portrait         Force portrait image instead of autodetecting from current screen res",
-                    "  --landscape        Force landscape image instead of autodetecting from current screen res",
-                    "  --locale <xx-XX>   Force specified locale, e.g. en-US, instead of autodetecting from system",
-                    "  --all-locales      Attempt to download images for all known Spotlight locales, implies --many",
-                    "  --outdir <dir>     Set output directory instead of defaulting to working directory",
-                    "  --outname <name>   Set output file name as <name>.ext for --single or --embed-meta",
-                    "  --skip-integrity   Skip integrity check of downloaded files: file size and sha256 hash",
-                    "  --api-tries <n>    Amount of unsuccessful API calls before giving up. Default is 3.",
-                    "  --metadata         Also save image metadata such as title & copyright as <image-name>.txt",
-                    "  --embed-meta       When available, embed metadata into wallpaper or lockscreen image",
-                    "  --from-file        Set the specified file as wallpaper/lockscreen instead of downloading",
-                    "  --from-dir         Set a random image from the specified directory as wallpaper/lockscreen",
-                    "  --restore          Restore the default lockscreen image, has no effect with other actions",
-                    "  --verbose          Display additional status messages while downloading images from API",
+                    "  --help              Show detailed program usage (this message)",
+                    "  --single            Print only one random url or download only one image as spotlight.jpg",
+                    "  --many              Try downloading as much images as possible by calling API many times",
+                    "  --amount <n>        Stop downloading after <n> images successfully downloaded, implies --many",
+                    "  --cache-size <n>    Only keep <n> most recent images in the output directory, delete others",
+                    "  --portrait          Force portrait image instead of autodetecting from current screen res",
+                    "  --landscape         Force landscape image instead of autodetecting from current screen res",
+                    "  --locale <xx-XX>    Force specified locale, e.g. en-US, instead of autodetecting from system",
+                    "  --all-locales       Attempt to download images for all known Spotlight locales, implies --many",
+                    "  --outdir <dir>      Set output directory instead of defaulting to working directory",
+                    "  --outname <name>    Set output file name as <name>.ext for --single or --embed-meta",
+                    "  --api-tries <n>     Amount of unsuccessful API calls before giving up. Default is 3.",
+                    "  --api-version <v>   Spotlight API version: 3 (Windows 10) or 4 (Windows 11). Default is 4",
+                    "  --skip-integrity    Skip integrity check: file size and sha256 (API v3) or parse image (API v4)",
+                    "  --maxres            Force maximum image resolution (API v3). API v4 always returns max res.",
+                    "  --metadata          Also save image metadata such as title & copyright as <image-name>.txt",
+                    "  --embed-meta        When available, embed metadata into wallpaper or lockscreen image",
+                    "  --from-file         Set the specified file as wallpaper/lockscreen instead of downloading",
+                    "  --from-dir          Set a random image from the specified directory as wallpaper/lockscreen",
+                    "  --restore           Restore the default lockscreen image, has no effect with other actions",
+                    "  --verbose           Display additional status messages while downloading images from API",
                     "",
                     "Exit codes:",
-                    "  0                  Success",
-                    "  1                  Invalid arguments",
-                    "  2                  Spotlight API request failure",
-                    "  3                  Image download failure or Failed to write image to disk",
-                    "  4                  Failed to define image as wallpaper or lock screen image"
+                    "  0                   Success",
+                    "  1                   Invalid arguments",
+                    "  2                   Spotlight API request failure",
+                    "  3                   Image download failure or Failed to write image to disk",
+                    "  4                   Failed to define image as wallpaper or lock screen image"
                 })
             {
                 Console.Error.WriteLine(str);
