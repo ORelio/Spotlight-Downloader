@@ -193,7 +193,7 @@ namespace SpotlightDownloader
         /// <param name="outputDir">Output directory</param>
         /// <param name="outputName">Output file name</param>
         /// <param name="adjustToScreen">Auto adjust image to current screen resolution</param>
-        /// <param name="adjustToScaling">Auto adjust text to current UI scaling factor</param>
+        /// <param name="adjustToScaling">Auto adjust text to current UI scaling factor to avoid blurry text</param>
         /// <returns>Output file path</returns>
         public static string EmbedMetadata(string inputImageFile, string outputDir, string outputName, bool adjustToScreen = true, bool adjustToScaling = true)
         {
@@ -217,10 +217,19 @@ namespace SpotlightDownloader
 
             if (adjustToScreen)
             {
+                // Crop image to get correct aspect ratio, optionally downscaling it if screen is smaller
                 Rectangle screen = System.Windows.Forms.Screen.PrimaryScreen.Bounds;
                 Image img2 = FixedImageResize(img, screen.Width, screen.Height, true);
                 img.Dispose();
                 img = img2;
+
+                if (adjustToScaling && (img.Width < screen.Width || img.Height < screen.Height))
+                {
+                    // Source image was smaller than screen: Upscale it to avoid blurry text
+                    img2 = SimpleImageResize(img, screen.Width, screen.Height);
+                    img.Dispose();
+                    img = img2;
+                }
             }
 
             string metadataFile = GetMetaLocation(inputImageFile);
@@ -327,6 +336,28 @@ namespace SpotlightDownloader
                 //Console.WriteLine("To: " + to.ToString());
                 grPhoto.DrawImage(image, to, from, System.Drawing.GraphicsUnit.Pixel);
 
+                return bmPhoto;
+            }
+        }
+
+        /// <summary>
+        /// Resize image to a fixed destination size without preserving aspect ratio
+        /// </summary>
+        /// <param name="image">Input image</param>
+        /// <param name="Width">Destination Width</param>
+        /// <param name="Height">Destination Height</param>
+        private static Image SimpleImageResize(Image image, int Width, int Height)
+        {
+            Bitmap bmPhoto = new System.Drawing.Bitmap(Width, Height);
+
+            using (System.Drawing.Graphics grPhoto = System.Drawing.Graphics.FromImage(bmPhoto))
+            {
+                grPhoto.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.HighQualityBicubic;
+                grPhoto.CompositingQuality = System.Drawing.Drawing2D.CompositingQuality.HighQuality;
+                grPhoto.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.HighQuality;
+                Rectangle to = new System.Drawing.Rectangle(0, 0, Width, Height);
+                Rectangle from = new System.Drawing.Rectangle(0, 0, image.Width, image.Height);
+                grPhoto.DrawImage(image, to, from, System.Drawing.GraphicsUnit.Pixel);
                 return bmPhoto;
             }
         }
