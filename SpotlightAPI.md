@@ -42,7 +42,7 @@ The JSON response contains details for one or more image(s) including image url,
 
 ## API v4
 
-- Used by: Windows 10
+- Used by: Windows 11
 - Used for: Lockscreen Lockscreen, Wallpaper
 - Default hostname: `fd.api.iris.microsoft.com`
 - Endpoint: `/v4/api/selection`
