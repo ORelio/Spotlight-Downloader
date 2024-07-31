@@ -1,5 +1,6 @@
 ﻿=======================================================
-==== SpotlightDL v1.4.5 - By ORelio - Microzoom.fr ====
+==== SpotlightDL v1.5.0 - By ORelio - Microzoom.fr ====
+==== https://github.com/ORelio/Spotlight-Downloader ===
 =======================================================
 
 Thanks for dowloading SpotlightDL!
@@ -9,8 +10,8 @@ SpotlightDL can also define images as wallpaper and system-wide lockscreen image
 
 It is useful in the following use cases:
  - Download the whole Spotlight library with maximum image resolution and metadata
- - Define Spotlight images as wallpaper, not only on Windows 10 but also on previous versions
- - Define Spotlight images as global lock screen on Windows 7, 8 and 10, without ads on Windows 10
+ - Define Spotlight images as wallpaper, not only on Windows 11 but also on previous versions
+ - Define Spotlight images as global lock screen on Windows 7/8/10/11, without ads on Windows 10/11
  - Chain SpotlightDL with your own scripts and apps by taking advantage of the url mode
 
 ============
@@ -33,7 +34,7 @@ update-archive-and-wallpaper
   This allows to gradually download images without hammering the Spotlight API.
 
 update-archive-and-lockscreen
-  Same as update-archive-and-lockscreen but updates the system-wide lockscreen.
+  Same as update-archive-and-wallpaper but updates the system-wide lockscreen.
   This script must be run as administrator as it replaces an image in the
   Windows folder and clear the lockscreen cache to force a lockscreen refresh.
 
@@ -48,7 +49,7 @@ update-lockscreen
   Windows folder and clear the lockscreen cache to force a lockscreen refresh.
 
 restore-lockscreen
-  This script restores the default lock screen image.
+  This script restores the default lockscreen image.
   This script must be run as administrator.
 
 generate-manual
@@ -65,7 +66,7 @@ hide-console
 ===========================
 
 If you wish to periodically update your wallpaper or lockscreen,
-you can schedule one of the provided script by following these instructions:
+you can schedule one of the provided scripts by following these instructions:
 
 = If you are not administrator =
 = Startup shortcut method =
@@ -113,7 +114,7 @@ Q: The lockscreen does not appear when I am logged on?
 R: Make sure the image is also selected in your personal lock screen settings.
 
 Q: How many images are downloaded when using default mode? (i.e. without using --single or --many)
-R: Default mode downloads a list of images returned by a single API call: previously 6-7, currently only 1.
+R: Default mode downloads a list of images returned by a single API call: currently 4.
 
 Q: Some images do not have a title or copyright in their metadata?
 R: Those fields are not provided for all images by the Spotlight API.
@@ -136,6 +137,9 @@ R: No. Batch files will reuse previously downloaded images, except spotlight-dow
 Q: How to enable image download on metered networks?
 R: Edit the batch file you want to use and remove the whole line containing "check-metered.ps1"
 
+Q: Images are 1080p even with --maxres option, how to get 4K images?
+A: 4K resolution is only available via API v4, supported by SpotlightDL v1.5.0 or higher
+
 +--------------------+
-| © 2018-2021 ORelio |
+| © 2018-2024 ORelio |
 +--------------------+

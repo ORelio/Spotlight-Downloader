@@ -10,7 +10,7 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("")]
 [assembly: AssemblyProduct("Spotlight Downloader")]
-[assembly: AssemblyCopyright("Copyright © ORelio 2018-2021")]
+[assembly: AssemblyCopyright("Copyright © ORelio 2018-2024")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 

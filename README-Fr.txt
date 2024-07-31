@@ -1,5 +1,6 @@
 ﻿========================================================
-==== SpotlightDL v1.4.5 - Par ORelio - Microzoom.fr ====
+==== SpotlightDL v1.5.0 - Par ORelio - Microzoom.fr ====
+==== https://github.com/ORelio/Spotlight-Downloader ====
 ========================================================
 
 Merci d'avoir téléchargé SpotlightDL!
@@ -9,8 +10,8 @@ SpotlightDL peut également définir des images en tant que fond d'écran ou sur
 
 Ce programme est utile dans les cas suivants :
  - Télécharger toute la bibliothèque d'images en définition maximale, avec fichiers de métadonnées
- - Définir les images en tant que fond d'écran, non seulement sous Windows 10 mais aussi sur les versions précédentes
- - Définir les images sur l'écran de verouillage global sous Windows 7, 8 et 10, sans les publicités sous Windows 10
+ - Définir les images en tant que fond d'écran, non seulement sous Windows 11 mais aussi sur les versions précédentes
+ - Définir les images sur l'écran de verouillage global sous Windows 7/8/10/11, sans les publicités sous Windows 10/11
  - Utiliser SpotlightDL dans vos propres scripts et programmes en appelant la fonction récupérant les URL des images
 
 =============
@@ -48,7 +49,7 @@ update-lockscreen
   et vide le cache de l'écran de verouillage afin d'en forcer la mise à jour immédiate.
 
 restore-lockscreen
-  Ce script restaure l'écran de verouillage par défaut.
+  Ce script restaure l'écran de verrouillage par défaut.
   Il requiert les droits administrateur.
 
 generate-manual
@@ -70,7 +71,7 @@ vous pouvez planifier l'exécution d'un script fourni en suivant ces instruction
 = Si vous n'avez pas les droits Administrateur =
 = Méthode du raccourci dans le menu Démarrage =
 
-Utilisez le raccourci clavier Win+R et spéciez:
+Utilisez le raccourci clavier Win+R et spécifiez:
   %appdata%\Microsoft\Windows\Start Menu\Programs\Startup
 
 Faite un clic droit à un endroit vide du dossier Démarrage > Nouveau > Raccourci
@@ -115,7 +116,7 @@ Q: L'écran de verrouillage n'apparaît pas lorsque j'ai ouvert ma session ?
 R: Assurez-vous que l'image est également sélectionnée dans vos paramètres personnels d'écran de verouillage.
 
 Q: Combien d'images sont téléchargées par défaut ? (càd sans les arguments --single ou --many)
-R: Par défaut, la liste d'images retournées par un seul appel API: précédemment 6-7, actuellement une seule.
+R: Par défaut, la liste d'images retournées par un seul appel API: actuellement 4.
 
 Q: Certaines images n'ont pas de titre ou de copyright dans leur métadonnées?
 R: Ces informations ne sont pas fournies pour toutes les images au niveau de l'API Windows à la une.
@@ -138,6 +139,9 @@ R: Non, dans ce cas les fichiers batch réutilisent les images déjà en cache, 
 Q: Comment activer le téléchargement d'images sur les connexions limitées ?
 R: Modifiez le fichier batch que vous utilisez pour supprimer entièrement la ligne contenant "check-metered.ps1"
 
+Q: Les images sont en 1080p même avec l'option --maxres, comment obtenir des images en 4K ?
+R: La définition 4K est disponible uniquement via l'API v4, prise en charge par SpotlightDL v1.5.0 ou supérieur
+
 +--------------------+
-| © 2018-2021 ORelio |
+| © 2018-2024 ORelio |
 +--------------------+
