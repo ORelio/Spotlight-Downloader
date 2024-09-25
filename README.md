@@ -1,4 +1,4 @@
-﻿# SpotlightDL
+﻿![SpotlightDL](Images/logo.png)
 
 This program can retrieve Windows Spotlight images by requesting the Microsoft Spotlight API.
 SpotlightDL can also define images as wallpaper and system-wide lockscreen image.

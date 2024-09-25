@@ -140,6 +140,16 @@ R: Edit the batch file you want to use and remove the whole line containing "che
 Q: Images are 1080p even with --maxres option, how to get 4K images?
 A: 4K resolution is only available via API v4, supported by SpotlightDL v1.5.0 or higher
 
+=========
+ Credits
+=========
+
+The Spotlight Downloader program has been created using the following resources:
+
+ - Bing / Spotlight API by Microsoft Corporation
+ - Spotlight API studies by KoalaBR, Biswa96 & ORelio
+ - Agency FB font family by Microsoft Corporation (Logo)
+
 +--------------------+
 | © 2018-2024 ORelio |
 +--------------------+

@@ -142,6 +142,16 @@ R: Modifiez le fichier batch que vous utilisez pour supprimer entièrement la li
 Q: Les images sont en 1080p même avec l'option --maxres, comment obtenir des images en 4K ?
 R: La définition 4K est disponible uniquement via l'API v4, prise en charge par SpotlightDL v1.5.0 ou supérieur
 
+===============
+ Remerciements
+===============
+
+Spotlight Downloader a été conçu en utilisant les ressources suivantes :
+
+ - API Bing / Spotlight par Microsoft Corporation
+ - Etudes de l'API Spotlight par KoalaBR, Biswa96 et ORelio
+ - Police Agency FB par Microsoft Corporation (Logo)
+
 +--------------------+
 | © 2018-2024 ORelio |
 +--------------------+
