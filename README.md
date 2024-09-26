@@ -4,17 +4,36 @@ This program can retrieve Windows Spotlight images by requesting the Microsoft S
 SpotlightDL can also define images as wallpaper and system-wide lockscreen image.
 
 It is useful in the following use cases:
- - Download the whole Spotlight library with maximum image resolution and metadata
+ - Download most of the Spotlight library with maximum image resolution and metadata
  - Define Spotlight images as wallpaper, not only on Windows 11 but also on previous versions
- - Define Spotlight images as global lock screen on Windows 7/8/10/11, removing the ads on Windows 10/11
+ - Define Spotlight images as global lock screen on Windows 7+, removing the ads on Windows 10+
  - Chain SpotlightDL with your own scripts and apps by taking advantage of the url mode
+
+# Download
+
+Have a look at the [releases section](https://github.com/ORelio/Spotlight-Downloader/releases) to get a build.
 
 # How to use
 
-Simply call `SpotlightDownloader.exe` from the Windows command prompt and see usage.
-The download/url modes should also work on Mac/Linux using the Mono framework.
+## From the command-line (Windows/Mac/Linux)
 
-A few Batch files are offered for ease of use for common tasks:
+Simply call `SpotlightDownloader.exe` from the Windows command prompt and see usage.
+
+The `download` and `url` modes should also work on Mac/Linux using the Mono framework.
+
+## Lockscreen Install Program (Windows)
+
+Download the [Lockscreen Setup](https://github.com/ORelio/Spotlight-Downloader/releases) and install it. Your Lock Screen will be replaced with ad-free Spotlight images.
+
+If you no longer need it, you can uninstall it from [App & features](https://support.microsoft.com/en-us/windows/uninstall-or-remove-apps-and-programs-in-windows-4b55f974-2cc6-2d2b-d092-5905080eaf98) like other programs.
+
+## Portable App from File Explorer (Windows)
+
+A few Batch files are offered for ease of use for common tasks.
+
+Download the [Zip Release](https://github.com/ORelio/Spotlight-Downloader/releases), extract it and double click on a script to launch the desired task:
+
+![Screenshot: Launching Spotlight Batch file from File Explorer](Images/batch-script-example.png)
 
  - `spotlight-download-archive`: Download many images to a SpotlightArchive folder
  - `update-archive-and-wallpaper`: Feed the Archive and use one image as wallpaper
@@ -24,16 +43,24 @@ A few Batch files are offered for ease of use for common tasks:
  - `restore-lockscreen`: Restore default system-wide lockscreen
  - `generate-manual`: Generate a text file with command-line usage
 
-If you wish to periodically update your wallpaper or lockscreen,
-you can schedule one of the provided script by following [these instructions](README-En.txt).
+If you wish to periodically launch one of these scripts, please refer to the [User Manual](README-En.txt).
 
 # How it works
 
+Creating this app required to overwome two challenges:
+
+1. Determine how the Spotlight API works to download images from it
+2. Understand how the Lock Screen works to replace it with arbitrary images
+
 ## Spotlight API
 
-See [SpotlightAPI.md](SpotlightAPI.md)
+By analyzing network traffic originating from Windows 10/11, it was possible to determine how to downloads images.
+
+See [SpotlightAPI.md](SpotlightAPI.md) for details about the Spotlight API endpoints.
 
 ## Global lock screen
+
+### Windows 8 and greater
 
 The global lock screen images for Windows 8 and 10 are stored as `C:\Windows\Web\Screen\imgXXX.jpg`.
 SpotlightDL backups each image as `imgXXX.jpg.bak` if it does not already exists, then overwrite this file.
@@ -46,15 +73,18 @@ Then, programs running as administrator can overwrite the lockscreen image and c
 This way of replacing the lockscreen is basically a C# implementation of [this script](https://www.reddit.com/r/PowerShell/comments/5fglby/powershell_to_set_windows_10_lockscreen/daoepvj/),
 avoiding the use of the `takeown` and `iacls` commands which are not reliable due to a [localization issue](http://community.idera.com/powershell/ask_the_experts/f/powershell_for_windows-12/10227/trying-to-make-a-takeown-exe-cmdlet-but-locales-is-causing-a-problem).
 
-Windows 7 support is also implemented through the [OEMBackground](https://www.askvg.com/windows-7-supports-login-screen-customization-without-3rd-party-software-how-to-instructions-inside/) feature:
+### Windows 7
+
+Windows 7 has an [OEMBackground](https://www.askvg.com/windows-7-supports-login-screen-customization-without-3rd-party-software-how-to-instructions-inside/) feature in registry allowing custom Logon Screen background:
 
 ````
 [HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Authentication\LogonUI\Background]
 "OEMBackground"=dword:00000001
 ````
 
-Then the image has to be placed in `C:\Windows\System32\oobe\info\backgrounds\backgroundDefault.jpg`
-Windows 7 enforces a limit of 250 KiB so SpotlightDL will recompress the image to the highest quality fitting in that limit.
+Then the image has to be placed in `C:\Windows\System32\oobe\info\backgrounds\backgroundDefault.jpg`.
+
+Windows 7 enforces a limit of 250 KiB, so SpotlightDL will recompress the image to the highest quality fitting in that limit. This results in lower quality lock screen images than Windows 8 and greater, but works without patching anything on the system so the feature is safe to use.
 
 # License
 
