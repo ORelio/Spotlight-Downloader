@@ -26,8 +26,14 @@ The `download` and `url` modes should also work on Mac/Linux using the Mono fram
 
 Then, from a terminal:
 
-```
+```bash
 mono SpotlightDownloader.exe
+```
+Example: Downloading Spotlight Archive:
+
+```bash
+mkdir SpotlightArchive
+mono SpotlightDownloader.exe download --many --maxres --metadata --outdir SpotlightArchive
 ```
 
 If you get TLS errors using Mono, try running `mozroots --import --ask-remove` once to install TLS root certificates on your computer.
