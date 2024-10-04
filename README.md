@@ -19,7 +19,20 @@ Have a look at the [releases section](https://github.com/ORelio/Spotlight-Downlo
 
 Simply call `SpotlightDownloader.exe` from the Windows command prompt and see usage.
 
-The `download` and `url` modes should also work on Mac/Linux using the Mono framework.
+The `download` and `url` modes should also work on Mac/Linux using the Mono framework:
+
+* On Mac: https://www.mono-project.com/download/stable/#download-mac
+* On Linux: `sudo apt install mono-runtime`
+
+Then, from a terminal:
+
+```
+mono SpotlightDownloader.exe
+```
+
+If you get TLS errors using Mono, try running `mozroots --import --ask-remove` once to install TLS root certificates on your computer.
+
+If Mono crashes, try installing `mono-complete` instead of `mono-runtime`. Use at least Mono v4.0.
 
 ## Lockscreen Install Program (Windows)
 
