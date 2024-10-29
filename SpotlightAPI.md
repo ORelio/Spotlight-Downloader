@@ -74,4 +74,6 @@ https://fd.api.iris.microsoft.com/v4/api/selection?&placement=88000820&bcnt=4&co
 
 Note: The `disphorzres` and `dispvertres` parameters are analytic values that have no effect on this API version.
 
+Note about `curl`: If the API returns "No ad available", try switching to a different [user agent](https://www.useragents.me/#most-common-desktop-useragents), e.g. `-A "Mozilla/5.0"`. See issue [#32](https://github.com/ORelio/Spotlight-Downloader/issues/32).
+
 **Credits:** APIv4 analysis conducted by ORelio for the Spotlight Downloader project. Endpoint found through analysis of network trafic originating from a Windows 11 virtual machine. Please credit the Spotlight Downloader project if you use this documentation for your own project.
