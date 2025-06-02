@@ -310,12 +310,12 @@ namespace SpotlightDownloader
                         try
                         {
                             SpotlightImage[] images = (fromFile != null && (action == "wallpaper" || action == "lockscreen"))
-                                ? new[] { new SpotlightImage() } // Skip API request, we'll use a local file
+                                ? [new SpotlightImage()] // Skip API request, we'll use a local file
                                 : Spotlight.GetImageUrls(maximumRes, portrait, locale, apiTryCount, apiVersion);
 
                             if (images.Length < 1)
                             {
-                                Console.Error.WriteLine(Program.Name + " received an empty image set from Spotlight API.");
+                                Console.Error.WriteLine(Name + " received an empty image set from Spotlight API.");
                                 Environment.Exit(2);
                             }
 
@@ -462,13 +462,13 @@ namespace SpotlightDownloader
             }
 
             foreach (string str in new[]{
-                    " ==== " + Program.Name + " v" + Program.Version + " - By ORelio and its contributors - Microzoom.fr ====",
+                    " ==== " + Name + " v" + Version + " - By ORelio and its contributors - Microzoom.fr ====",
                     "",
                     "Retrieve Windows Spotlight images by requesting the Microsoft Spotlight API.",
-                    Program.Name + " can also define images as wallpaper and system-wide lockscreen image.",
+                    Name + " can also define images as wallpaper and system-wide lockscreen image.",
                     "",
                     "Usage:",
-                    "  " + Program.Name + ".exe <action> [arguments]",
+                    "  " + Name + ".exe <action> [arguments]",
                     "  Only one action must be provided, as first argument",
                     "  Then, provide any number of arguments from the list below.",
                     "",
