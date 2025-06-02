@@ -3,7 +3,6 @@
     <PropertyGroup>
         <OutputType>WinExe</OutputType>
         <TargetFramework>net9.0-windows</TargetFramework>
-        <UseWindowsForms>true</UseWindowsForms>
         <RootNamespace>SpotlightDownloader</RootNamespace>
     </PropertyGroup>
 </Project>
