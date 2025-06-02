@@ -462,7 +462,7 @@ namespace SpotlightDownloader
             }
 
             foreach (string str in new[]{
-                    " ==== " + Program.Name + " v" + Program.Version + " - By ORelio - Microzoom.fr ====",
+                    " ==== " + Program.Name + " v" + Program.Version + " - By ORelio and its contributors - Microzoom.fr ====",
                     "",
                     "Retrieve Windows Spotlight images by requesting the Microsoft Spotlight API.",
                     Program.Name + " can also define images as wallpaper and system-wide lockscreen image.",
