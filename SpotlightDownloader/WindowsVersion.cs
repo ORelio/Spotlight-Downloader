@@ -1,6 +1,6 @@
 ﻿using Microsoft.Win32;
 
-namespace SharpTools
+namespace SpotlightDownloader
 {
     /// <summary>
     /// Retrieve information about the current Windows version

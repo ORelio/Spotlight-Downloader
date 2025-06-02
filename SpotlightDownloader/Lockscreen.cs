@@ -1,12 +1,9 @@
 ﻿using System;
 using System.Linq;
 using System.IO;
-using SharpTools;
 using Microsoft.Win32;
-using System.Drawing.Imaging;
-using System.Drawing;
 
-namespace SharpTools
+namespace SpotlightDownloader
 {
     /// <summary>
     /// Wrapper around the Windows lockscreen image

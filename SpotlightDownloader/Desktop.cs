@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Runtime.InteropServices;
 
-namespace SharpTools
+namespace SpotlightDownloader
 {
     /// <summary>
     /// Programatically interact with the Desktop using Windows API

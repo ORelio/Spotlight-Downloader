@@ -4,7 +4,7 @@ using PrivilegeClass;
 using System.Security.AccessControl;
 using System.Security.Principal;
 
-namespace SharpTools
+namespace SpotlightDownloader
 {
     /// <summary>
     /// File system utilities for applications running as administrator

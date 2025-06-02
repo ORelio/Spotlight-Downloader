@@ -5,7 +5,6 @@ using System.Text;
 using System.Security.Cryptography;
 using System.Threading;
 using System.Drawing;
-using SharpTools;
 
 namespace SpotlightDownloader
 {

@@ -3,7 +3,7 @@ using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
 
-namespace SharpTools
+namespace SpotlightDownloader
 {
     /// <summary>
     /// Wrapper class for generating images

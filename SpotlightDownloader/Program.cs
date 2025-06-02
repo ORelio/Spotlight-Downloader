@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Linq;
 using System.IO;
-using SharpTools;
-using System.Diagnostics;
 using System.Collections.Generic;
 
 namespace SpotlightDownloader

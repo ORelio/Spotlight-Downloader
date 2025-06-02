@@ -1,9 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text;
 
-namespace SharpTools
+namespace SpotlightDownloader
 {
     /// <summary>
     /// This class parses JSON data and returns an object describing that data.
