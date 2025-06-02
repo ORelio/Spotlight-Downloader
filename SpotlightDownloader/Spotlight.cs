@@ -3,12 +3,11 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Net;
 using System.Text;
 using System.Threading;
 using System.Windows.Forms;
 using System.Text.Json;
-
+using System.Net.Http;
 using static System.String;
 
 namespace SpotlightDownloader
@@ -56,29 +55,31 @@ namespace SpotlightDownloader
         /// <param name="apiver">Version of the Spotlight API</param>
         /// <returns>Raw JSON response</returns>
         /// <exception cref="System.Net.WebException">An exception is thrown if the request fails</exception>
+        private static readonly HttpClient httpClient = new();
+
         private static string PerformApiRequest(bool maxres, string locale = null, ApiVersion apiver = ApiVersion.v4)
         {
-            WebClient webClient = new WebClient();
             CultureInfo currentCulture = CultureInfo.CurrentCulture;
             RegionInfo currentRegion = new(currentCulture.Name);
-            string region = currentRegion.TwoLetterISORegionName.ToLower();
+            string region = currentRegion.TwoLetterISORegionName.ToLower(currentCulture);
 
             if (locale == null)
                 locale = currentCulture.Name;
-            else if (locale.Length > 2 && locale.Contains("-"))
-                region = locale.Split('-')[1].ToLower();
+            else if (locale.Length > 2 && locale.Contains('-', StringComparison.Ordinal))
+                region = locale.Split('-')[1].ToLower(currentCulture);
 
-            string request;
+            Uri request;
             if (apiver == ApiVersion.v4)
             {
                 // Windows 11 requests the API with "fd.api.iris.microsoft.com" hostname instead of "arc.msn.com" but both work
                 // Note: disphorzres and dispvertres parameters are ignored by this API version, need to scale images client-side
-                // Note: no fileSize or sha256 in this API versio so cannot easily check image integrity after download
-                request = Format(
+                // Note: no fileSize or sha256 in this API version so we cannot easily check image integrity after downloading
+                request = new Uri(Format(
+                    CultureInfo.InvariantCulture,
                     "https://fd.api.iris.microsoft.com/v4/api/selection?&placement=88000820&bcnt=4&country={0}&locale={1}&fmt=json",
                     region,
                     locale
-                );
+                ));
             }
             else
             {
@@ -87,20 +88,23 @@ namespace SpotlightDownloader
 
                 // Windows 10 requests the API with older hostname "arc.msn.com" instead of "fd.api.iris.microsoft.com" but both work
                 // This API supports setting disphorzres and dispvertres to have image scaled server-side and save bandwidth
-                // This API also returns fileSize and sha256 to allow verifying image integrity after download
-                request = Format(
+                // This API also returns fileSize and sha256 to allow verifying image integrity after downloading
+                request = new Uri(Format(
+                    CultureInfo.InvariantCulture,
                     "https://arc.msn.com/v3/Delivery/Placement?pid=338387&fmt=json&ua=WindowsShellClient"
-                        + "%2F0&cdm=1&disphorzres={0}&dispvertres={1}&pl={2}&lc={3}&ctry={4}&time={5}",
-                        screenWidth,
-                        screenHeight,
+                    + "%2F0&cdm=1&disphorzres={0}&dispvertres={1}&pl={2}&lc={3}&ctry={4}&time={5}",
+                    screenWidth,
+                    screenHeight,
                     locale,
                     locale,
                     region,
-                    DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ssZ")
-                );
+                    DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ssZ", CultureInfo.InvariantCulture)
+                ));
             }
 
-            byte[] stringRaw = webClient.DownloadData(request);
+            var response = httpClient.GetAsync(request).GetAwaiter().GetResult();
+            response.EnsureSuccessStatusCode();
+            byte[] stringRaw = response.Content.ReadAsByteArrayAsync().GetAwaiter().GetResult();
             return Encoding.UTF8.GetString(stringRaw);
         }
 
@@ -145,7 +149,7 @@ namespace SpotlightDownloader
         /// <param name="apiver">Version of the Spotlight API</param>
         /// <returns>List of images</returns>
         /// <exception cref="System.Net.WebException">An exception is thrown if the request fails</exception>
-        /// <exception cref="System.IO.InvalidDataException">An exception is thrown if the JSON data is invalid</exception>
+        /// <exception cref="InvalidDataException">An exception is thrown if the JSON data is invalid</exception>
         private static SpotlightImage[] GetImageUrlsSingleAttempt(bool maxres = false, bool? portrait = null, string locale = null, ApiVersion apiver = ApiVersion.v4)
         {
             List<SpotlightImage> images = [];
@@ -189,7 +193,6 @@ namespace SpotlightDownloader
                             string item_url = assetProp.GetString();
                             if (!IsNullOrEmpty(item_url) && item_url.StartsWith("https://", StringComparison.InvariantCultureIgnoreCase))
                             {
-                                string item_name = item_url.Split('/').Last().Replace("?ver=", "").Replace('?', '_').Replace('=', '_');
                                 string item_name = item_url.Split('/').Last().Split('?')[0];
                                 images.Add(new SpotlightImage
                                 {
