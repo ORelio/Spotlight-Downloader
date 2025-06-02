@@ -4,11 +4,11 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
-using System.Threading;
 using System.Windows.Forms;
 using System.Text.Json;
 using System.Net.Http;
 using static System.String;
+using System.Threading.Tasks;
 
 namespace SpotlightDownloader
 {
@@ -57,7 +57,7 @@ namespace SpotlightDownloader
         /// <exception cref="System.Net.WebException">An exception is thrown if the request fails</exception>
         private static readonly HttpClient httpClient = new();
 
-        private static string PerformApiRequest(bool maxres, string locale = null, ApiVersion apiver = ApiVersion.v4)
+        private static async Task<string> PerformApiRequestAsync(bool maxres, string locale = null, ApiVersion apiver = ApiVersion.v4)
         {
             CultureInfo currentCulture = CultureInfo.CurrentCulture;
             RegionInfo currentRegion = new(currentCulture.Name);
@@ -102,9 +102,9 @@ namespace SpotlightDownloader
                 ));
             }
 
-            var response = httpClient.GetAsync(request).GetAwaiter().GetResult();
+            var response = await httpClient.GetAsync(request).ConfigureAwait(false);
             response.EnsureSuccessStatusCode();
-            byte[] stringRaw = response.Content.ReadAsByteArrayAsync().GetAwaiter().GetResult();
+            byte[] stringRaw = await response.Content.ReadAsByteArrayAsync().ConfigureAwait(false);
             return Encoding.UTF8.GetString(stringRaw);
         }
 
@@ -119,21 +119,21 @@ namespace SpotlightDownloader
         /// <returns>List of images</returns>
         /// <exception cref="System.Net.WebException">An exception is thrown if the request fails</exception>
         /// <exception cref="System.IO.InvalidDataException">An exception is thrown if the JSON data is invalid</exception>
-        public static SpotlightImage[] GetImageUrls(bool maxres = false, bool? portrait = null, string locale = null, int attempts = 1, ApiVersion apiver = ApiVersion.v4)
+        public static async Task<SpotlightImage[]> GetImageUrlsAsync(bool maxres = false, bool? portrait = null, string locale = null, int attempts = 1, ApiVersion apiver = ApiVersion.v4)
         {
             while (true)
             {
                 try
                 {
                     attempts--;
-                    return GetImageUrlsSingleAttempt(maxres, portrait, locale, apiver);
+                    return await GetImageUrlsSingleAttemptAsync(maxres, portrait, locale, apiver).ConfigureAwait(false);
                 }
                 catch (Exception e)
                 {
                     if (attempts > 0)
                     {
-                        Console.Error.WriteLine("SpotlightAPI: " + e.GetType() + ": " + e.Message + " - Waiting 10 seconds before retrying...");
-                        Thread.Sleep(TimeSpan.FromSeconds(10));
+                        await Console.Error.WriteLineAsync("SpotlightAPI: " + e.GetType() + ": " + e.Message + " - Waiting 10 seconds before retrying...").ConfigureAwait(false);
+                        await Task.Delay(TimeSpan.FromSeconds(10)).ConfigureAwait(false);
                     }
                     else throw;
                 }
@@ -150,10 +150,10 @@ namespace SpotlightDownloader
         /// <returns>List of images</returns>
         /// <exception cref="System.Net.WebException">An exception is thrown if the request fails</exception>
         /// <exception cref="InvalidDataException">An exception is thrown if the JSON data is invalid</exception>
-        private static SpotlightImage[] GetImageUrlsSingleAttempt(bool maxres = false, bool? portrait = null, string locale = null, ApiVersion apiver = ApiVersion.v4)
+        private static async Task<SpotlightImage[]> GetImageUrlsSingleAttemptAsync(bool maxres = false, bool? portrait = null, string locale = null, ApiVersion apiver = ApiVersion.v4)
         {
             List<SpotlightImage> images = [];
-            string rawJson = PerformApiRequest(maxres, locale, apiver);
+            string rawJson = await PerformApiRequestAsync(maxres, locale, apiver).ConfigureAwait(false);
             var root = Json.ParseJson(rawJson);
             // Console.Error.WriteLine("=== RAW JSON RECEIVED FROM SERVER ==="); // debug purposes
             // Console.Error.WriteLine(rawJson); // debug purposes
@@ -171,7 +171,7 @@ namespace SpotlightDownloader
             {
                 if (!itemWrapper.TryGetProperty("item", out var itemStringElement) || itemStringElement.ValueKind != JsonValueKind.String)
                 {
-                    Console.Error.WriteLine("SpotlightAPI: Ignoring non-object item while parsing 'batchrsp/items' field in JSON API response.");
+                    await Console.Error.WriteLineAsync("SpotlightAPI: Ignoring non-object item while parsing 'batchrsp/items' field in JSON API response.").ConfigureAwait(false);
                     continue;
                 }
 
@@ -206,7 +206,7 @@ namespace SpotlightDownloader
                             }
                             else
                             {
-                                Console.Error.WriteLine("SpotlightAPI: Ignoring item image with missing or invalid uri.");
+                                await Console.Error.WriteLineAsync("SpotlightAPI: Ignoring item image with missing or invalid uri.").ConfigureAwait(false);
                             }
                         }
                     }
@@ -238,7 +238,7 @@ namespace SpotlightDownloader
                         }
                         else
                         {
-                            Console.Error.WriteLine("SpotlightAPI: Ignoring item image uri with missing 'u', 'sha256' and/or 'fileSize' field(s).");
+                            await Console.Error.WriteLineAsync("SpotlightAPI: Ignoring item image uri with missing 'u', 'sha256' and/or 'fileSize' field(s).").ConfigureAwait(false);
                         }
                     }
                 }
