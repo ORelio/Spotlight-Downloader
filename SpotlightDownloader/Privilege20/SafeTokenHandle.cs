@@ -1,8 +1,9 @@
 using System;
-using System.Security;
-using System.Runtime.InteropServices;
-using Microsoft.Win32.SafeHandles;
 using System.Runtime.ConstrainedExecution;
+using System.Runtime.InteropServices;
+using System.Security;
+
+using Microsoft.Win32.SafeHandles;
 
 namespace PrivilegeClass
 {

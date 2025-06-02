@@ -1,0 +1,8 @@
+# Enable sorting and grouping for 'using' directives
+[*.cs]
+
+# Put System namespaces first (e.g., System.Text before MyApp.Models)
+dotnet_sort_system_directives_first = true
+
+# Add a blank line between groups of usings
+dotnet_separate_import_directive_groups = true
