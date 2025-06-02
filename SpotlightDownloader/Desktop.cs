@@ -85,7 +85,7 @@ namespace SpotlightDownloader
             get
             {
                 IntPtr hWnd = GetWindow(GetWindow(FindWindow("Progman", "Program Manager"), GetWindow_Cmd.GW_CHILD), GetWindow_Cmd.GW_CHILD);
-                WINDOWINFO info = new WINDOWINFO();
+                WINDOWINFO info = new();
                 info.cbSize = (uint)Marshal.SizeOf(info);
                 GetWindowInfo(hWnd, ref info);
                 return (info.dwStyle & 0x10000000) == 0x10000000;
@@ -96,7 +96,7 @@ namespace SpotlightDownloader
         {
             int SPI_GETDESKWALLPAPER = 0x73;
             int MAX_PATH = 260;
-            string wallpaper = new string('\0', (int)MAX_PATH);
+            string wallpaper = new('\0', (int)MAX_PATH);
             SystemParametersInfo(SPI_GETDESKWALLPAPER, MAX_PATH, wallpaper, 0);
             return wallpaper.Substring(0, wallpaper.IndexOf('\0'));
         }

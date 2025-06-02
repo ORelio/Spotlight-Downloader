@@ -22,8 +22,8 @@ namespace SpotlightDownloader
         /// <seealso>https://stackoverflow.com/a/16216587</seealso>
         public static void GrantAll(string path, bool recursive = false)
         {
-            Privilege processPrivilege = new Privilege(Privilege.TakeOwnership);
-            SecurityIdentifier adminSid = new SecurityIdentifier(WellKnownSidType.BuiltinAdministratorsSid, null);
+            Privilege processPrivilege = new(Privilege.TakeOwnership);
+            SecurityIdentifier adminSid = new(WellKnownSidType.BuiltinAdministratorsSid, null);
 
             try
             {
@@ -31,9 +31,9 @@ namespace SpotlightDownloader
                 FileSecurity fileSecurity = new FileSecurity();
                 //fileSecurity.SetOwner(new NTAccount(Environment.UserDomainName, Environment.UserName));
                 fileSecurity.SetOwner(adminSid);
-                File.SetAccessControl(path, fileSecurity);
+                new FileInfo(path).SetAccessControl(fileSecurity);
 
-                DirectoryInfo dInfo = new DirectoryInfo(path);
+                DirectoryInfo dInfo = new(path);
                 DirectorySecurity dSecurity = dInfo.GetAccessControl();
                 dSecurity.AddAccessRule(new FileSystemAccessRule(adminSid,
                     FileSystemRights.FullControl,
@@ -67,7 +67,7 @@ namespace SpotlightDownloader
         {
             AppDomain.CurrentDomain.SetPrincipalPolicy(PrincipalPolicy.WindowsPrincipal);
             WindowsIdentity wi = WindowsIdentity.GetCurrent();
-            WindowsPrincipal wp = new WindowsPrincipal(wi);
+            WindowsPrincipal wp = new(wi);
             return wp.IsInRole(WindowsBuiltInRole.Administrator);
         }
     }

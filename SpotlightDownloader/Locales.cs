@@ -12,8 +12,8 @@ namespace SpotlightDownloader
         /// <summary>
         /// Collection of locales supported by the Spotlight API
         /// </summary>
-        public static readonly HashSet<string> AllKnownSpotlightLocales = new HashSet<string>()
-        {
+        public static readonly HashSet<string> AllKnownSpotlightLocales =
+        [
             "af-NA",
             "am-ET",
             "ar-AE",
@@ -362,6 +362,6 @@ namespace SpotlightDownloader
             "zh-MO",
             "zh-SG",
             "zh-TW",
-        };
+        ];
     }
 }
