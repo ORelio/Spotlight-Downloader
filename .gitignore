@@ -4,3 +4,4 @@ SpotlightDownloader/bin
 SpotlightDownloader/obj
 SpotlightDownloader/*.user
 .vs
+.vscode
