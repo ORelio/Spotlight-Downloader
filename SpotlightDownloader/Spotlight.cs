@@ -190,6 +190,7 @@ namespace SpotlightDownloader
                             if (!IsNullOrEmpty(item_url) && item_url.StartsWith("https://", StringComparison.InvariantCultureIgnoreCase))
                             {
                                 string item_name = item_url.Split('/').Last().Replace("?ver=", "").Replace('?', '_').Replace('=', '_');
+                                string item_name = item_url.Split('/').Last().Split('?')[0];
                                 images.Add(new SpotlightImage
                                 {
                                     Uri = item_url,
