@@ -26,9 +26,9 @@ namespace SpotlightDownloader
         /// The data can be an object, an array or a string
         /// </summary>
 
-        public class JSONData
+        internal class JSONData
         {
-            public enum DataType { Object, Array, String };
+            internal enum DataType { Object, Array, String };
             private DataType type;
             public DataType Type { get { return type; } }
             public Dictionary<string, JSONData> Properties;

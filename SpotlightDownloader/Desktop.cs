@@ -8,7 +8,7 @@ namespace SpotlightDownloader
     /// By ORelio - (c) 2018 - Available under the CDDL-1.0 license
     /// </summary>
 
-    public static class Desktop
+    internal static class Desktop
     {
         //Code by Ondrej Balas
         //Source : stackoverflow.com/questions/6402834/
@@ -50,7 +50,7 @@ namespace SpotlightDownloader
         private static extern bool GetWindowInfo(IntPtr hwnd, ref WINDOWINFO pwi);
 
         [StructLayout(LayoutKind.Sequential)]
-        public struct RECT
+        internal struct RECT
         {
             private int _Left;
             private int _Top;

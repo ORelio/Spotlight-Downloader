@@ -12,7 +12,7 @@ namespace SpotlightDownloader
     /// Jpeg part of this class is written by Pratik and davidwroxy from StackOverflow
     /// </remarks>
     /// </summary>
-    public static class ImageEncoder
+    internal static class ImageEncoder
     {
         /// <summary>
         /// Encode an input image to a Jpeg file below the requested size, trying to achieve maximum possible quality.

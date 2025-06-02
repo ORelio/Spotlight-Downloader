@@ -18,7 +18,7 @@ namespace SpotlightDownloader
         /// <summary>
         /// Refers to different versions of the Spotlight API
         /// </summary>
-        public enum ApiVersion
+        internal enum ApiVersion
         {
             /// <summary>
             /// API version used by Windows 10 for its Lockscreen.

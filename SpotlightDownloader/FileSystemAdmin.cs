@@ -11,7 +11,7 @@ namespace SpotlightDownloader
     /// File system utilities for applications running as administrator
     /// By ORelio (c) 2018 - CDDL 1.0
     /// </summary>
-    public static class FileSystemAdmin
+    internal static class FileSystemAdmin
     {
         /// <summary>
         /// Pass ownership and full control of the specified file or directory to the Administrators group. The process must run elevated to do this.

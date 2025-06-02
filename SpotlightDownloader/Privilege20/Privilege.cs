@@ -11,12 +11,12 @@ namespace PrivilegeClass
     using PrivilegeNotHeldException = System.Security.AccessControl.PrivilegeNotHeldException;
     using Win32Exception = System.ComponentModel.Win32Exception;
 
-    public delegate void PrivilegedCallback(object state);
+    internal delegate void PrivilegedCallback(object state);
 
     /// <summary>
     /// Privilege Library from "Manipulate Privileges in Managed Code Reliably, Securely, and Efficiently" article, MSDN magazine, March 2005
     /// </summary>
-    public sealed class Privilege
+    internal sealed class Privilege
     {
         #region Private static members
         private static LocalDataStoreSlot tlsSlot = Thread.AllocateDataSlot();
