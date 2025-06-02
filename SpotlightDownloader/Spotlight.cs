@@ -2,11 +2,11 @@
 using System.Net;
 using System.Linq;
 using System.Globalization;
-using System.Windows.Forms;
 using System.IO;
 using System.Collections.Generic;
 using System.Text;
 using System.Threading;
+using System.Windows.Forms;
 
 namespace SpotlightDownloader
 {

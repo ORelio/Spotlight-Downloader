@@ -101,7 +101,7 @@ namespace SpotlightDownloader
             return wallpaper.Substring(0, wallpaper.IndexOf('\0'));
         }
 
-        public static int SetWallpaper(string path, bool permanent=true)
+        public static int SetWallpaper(string path, bool permanent = true)
         {
             int SPIF_UPDATEINIFILE = 0x01;
             int SPIF_SENDWININICHANGE = 0x02;

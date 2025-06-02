@@ -8,10 +8,11 @@ namespace PrivilegeClass
 {
     internal sealed class SafeTokenHandle : SafeHandleZeroOrMinusOneIsInvalid
     {
-        private SafeTokenHandle() : base (true) {}
+        private SafeTokenHandle() : base(true) { }
 
         // 0 is an Invalid Handle
-        internal SafeTokenHandle(IntPtr handle) : base (true) {
+        internal SafeTokenHandle(IntPtr handle) : base(true)
+        {
             SetHandle(handle);
         }
 
@@ -20,10 +21,10 @@ namespace PrivilegeClass
             get { return new SafeTokenHandle(IntPtr.Zero); }
         }
 
-        [DllImport(NativeMethods.KERNEL32, SetLastError=true),
+        [DllImport(NativeMethods.KERNEL32, SetLastError = true),
          SuppressUnmanagedCodeSecurity,
          ReliabilityContract(Consistency.WillNotCorruptState, Cer.Success)]
-        private static extern bool CloseHandle (IntPtr handle);
+        private static extern bool CloseHandle(IntPtr handle);
 
         override protected bool ReleaseHandle()
         {
