@@ -5,7 +5,7 @@ using System.Net;
 using System.Net.Http;
 using System.Security.Cryptography;
 using System.Text;
-using System.Threading;
+using System.Threading.Tasks;
 
 namespace SpotlightDownloader
 {
@@ -137,21 +137,21 @@ namespace SpotlightDownloader
         /// <exception cref="IOException">Thrown if writing file to disk fails</exception>
         /// <exception cref="InvalidDataException">Thrown if data sent by server do not pass integrity check</exception>
         /// <returns>Output file path</returns>
-        public string DownloadToFile(string outputDir, bool integrityCheck = true, bool metadata = false, string outputName = null, int attempts = 1)
+        public async Task<string> DownloadToFile(string outputDir, bool integrityCheck = true, bool metadata = false, string outputName = null, int attempts = 1)
         {
             while (true)
             {
                 try
                 {
                     attempts--;
-                    return DownloadToFileSingleAttempt(outputDir, integrityCheck, metadata, outputName);
+                    return await DownloadToFileSingleAttempt(outputDir, integrityCheck, metadata, outputName).ConfigureAwait(false);
                 }
                 catch (Exception e)
                 {
                     if (attempts > 0)
                     {
-                        Console.Error.WriteLine($"{MetaHeader}: {e.GetType()}: {e.Message} - Waiting 10 seconds before retrying...");
-                        Thread.Sleep(TimeSpan.FromSeconds(10));
+                        await Console.Error.WriteLineAsync($"{MetaHeader}: {e.GetType()}: {e.Message} - Waiting 10 seconds before retrying...").ConfigureAwait(false);
+                        await Task.Delay(TimeSpan.FromSeconds(10)).ConfigureAwait(false);
                     }
                     else throw;
                 }
@@ -169,14 +169,14 @@ namespace SpotlightDownloader
         /// <exception cref="IOException">Thrown if writing file to disk fails</exception>
         /// <exception cref="InvalidDataException">Thrown if data sent by server do not pass integrity check</exception>
         /// <returns>Output file path</returns>
-        private string DownloadToFileSingleAttempt(string outputDir, bool integrityCheck = true, bool metadata = false, string outputName = null)
+        private async Task<string> DownloadToFileSingleAttempt(string outputDir, bool integrityCheck = true, bool metadata = false, string outputName = null)
         {
             string outputFile = GetFilePath(outputDir, outputName);
 
             long? expectedContentLength = null;
 
             using (HttpClient client = new())
-            using (HttpResponseMessage response = client.GetAsync(new Uri(Uri), HttpCompletionOption.ResponseHeadersRead).Result)
+            using (HttpResponseMessage response = await client.GetAsync(new Uri(Uri), HttpCompletionOption.ResponseHeadersRead).ConfigureAwait(false))
             {
                 response.EnsureSuccessStatusCode();
 
@@ -186,9 +186,9 @@ namespace SpotlightDownloader
                     expectedContentLength = response.Content.Headers.ContentLength.Value;
                 }
 
-                using Stream stream = response.Content.ReadAsStreamAsync().Result;
+                using Stream stream = await response.Content.ReadAsStreamAsync().ConfigureAwait(false);
                 using FileStream fileStream = new(outputFile, FileMode.Create, FileAccess.Write, FileShare.None);
-                stream.CopyTo(fileStream);
+                await stream.CopyToAsync(fileStream).ConfigureAwait(false);
             }
 
             if (expectedContentLength.HasValue)
@@ -214,7 +214,7 @@ namespace SpotlightDownloader
                 {
                     using FileStream fileStream = File.OpenRead(outputFile);
                     using var sha256 = SHA256.Create();
-                    byte[] hash = sha256.ComputeHash(fileStream);
+                    byte[] hash = await sha256.ComputeHashAsync(fileStream).ConfigureAwait(false);
                     string hashString = Convert.ToBase64String(hash);
                     if (hashString != Sha256)
                     {

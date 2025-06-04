@@ -142,7 +142,7 @@ namespace SpotlightDownloader
                         {
                             if (parsed.SingleImage || parsed.Action == "wallpaper" || parsed.Action == "lockscreen")
                             {
-                                string imageFile = parsed.FromFile ?? randomImage.DownloadToFile(parsed.OutputDir, parsed.IntegrityCheck, parsed.Metadata, parsed.OutputName, parsed.ApiTryCount);
+                                string imageFile = parsed.FromFile ?? await randomImage.DownloadToFile(parsed.OutputDir, parsed.IntegrityCheck, parsed.Metadata, parsed.OutputName, parsed.ApiTryCount).ConfigureAwait(false);
 
                                 if (!Path.IsPathRooted(imageFile))
                                 {
