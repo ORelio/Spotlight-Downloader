@@ -115,7 +115,11 @@ namespace SpotlightDownloader
                             Environment.Exit(2);
                         }
 
-                        SpotlightImage randomImage = images.OrderBy(p => new Guid()).First();
+                        Random rng = new();
+#pragma warning disable CA5394
+                        // false alarm: just randomizing the order of the images, no need for cryptographic purposes
+                        SpotlightImage randomImage = images[rng.Next(images.Length)];
+#pragma warning restore CA5394
 
                         if (parsed.Action == "urls")
                         {
