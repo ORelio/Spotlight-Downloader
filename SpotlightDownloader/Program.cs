@@ -60,7 +60,7 @@ namespace SpotlightDownloader
                         "  --skip-integrity    Skip integrity check: file size and sha256 (API v3) or parse image (API v4)",
                         "  --maxres            Force maximum image resolution (API v3). API v4 always returns max res.",
                         "  --metadata          Also save image metadata such as title & copyright as <image-name>.txt",
-                        "  --embed-meta        When available, embed metadata into wallpaper or lockscreen image",
+                        //"  --embed-meta        When available, embed metadata into wallpaper or lockscreen image",
                         "  --from-file         Set the specified file as wallpaper/lockscreen instead of downloading",
                         "  --from-dir          Set a random image from the specified directory as wallpaper/lockscreen",
                         "  --verbose           Display additional status messages while downloading images from API",
@@ -137,8 +137,12 @@ namespace SpotlightDownloader
                             if (parsed.SingleImage || parsed.Action == "wallpaper" || parsed.Action == "lockscreen")
                             {
                                 string imageFile = parsed.FromFile ?? randomImage.DownloadToFile(parsed.OutputDir, parsed.IntegrityCheck, parsed.Metadata, parsed.OutputName, parsed.ApiTryCount);
-                                if (parsed.EmbedMetadata)
-                                    imageFile = SpotlightImage.EmbedMetadata(imageFile, parsed.OutputDir, parsed.OutputName);
+
+                                if (!Path.IsPathRooted(imageFile))
+                                {
+                                    imageFile = Path.GetFullPath(imageFile);
+                                }
+
                                 Console.WriteLine(imageFile);
                                 if (parsed.Action == "wallpaper")
                                 {
@@ -148,7 +152,7 @@ namespace SpotlightDownloader
                                     }
                                     catch (Exception e)
                                     {
-                                        Console.Error.WriteLine(e.GetType() + ": " + e.Message);
+                                        Console.Error.WriteLine("Failed to set wallpaper: " + e.Message);
                                         Environment.Exit(4);
                                     }
                                 }
