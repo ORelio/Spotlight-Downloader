@@ -149,6 +149,10 @@ namespace SpotlightDownloader
                                     try
                                     {
                                         Desktop.SetWallpaper(imageFile);
+#pragma warning disable CA1303
+                                        // no plans for localization yet so temporary disable CA1303
+                                        Console.WriteLine("Wallpaper set successfully.");
+#pragma warning restore CA1303
                                     }
                                     catch (Exception e)
                                     {
@@ -158,21 +162,17 @@ namespace SpotlightDownloader
                                 }
                                 else if (parsed.Action == "lockscreen")
                                 {
-                                    if (FileSystemAdmin.IsAdmin())
+                                    try
                                     {
-                                        try
-                                        {
-                                            Lockscreen.SetGlobalLockscreen(imageFile);
-                                        }
-                                        catch (Exception e)
-                                        {
-                                            Console.Error.WriteLine(e.GetType() + ": " + e.Message);
-                                            Environment.Exit(4);
-                                        }
+                                        Lockscreen.SetLockScreen(imageFile).GetAwaiter().GetResult();
+#pragma warning disable CA1303
+                                        // no plans for localization yet so temporary disable CA1303
+                                        Console.WriteLine("Lockscreen set successfully.");
+#pragma warning restore CA1303
                                     }
-                                    else
+                                    catch (Exception e)
                                     {
-                                        Console.Error.WriteLine("This program must run as administrator to change the global lockscreen.");
+                                        Console.Error.WriteLine("Failed to set lockscreen: " + e.GetType() + ": " + e.Message);
                                         Environment.Exit(4);
                                     }
                                 }
