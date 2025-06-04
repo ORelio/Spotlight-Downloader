@@ -246,6 +246,14 @@ namespace SpotlightDownloader
             }
 
             var uniqueImages = new List<SpotlightImage>();
+            var seenUrls = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            foreach (var img in images)
+            {
+                if (!IsNullOrEmpty(img.Uri) && seenUrls.Add(img.Uri))
+                    uniqueImages.Add(img);
+            }
+
+            return [.. uniqueImages];
         }
     }
 }
