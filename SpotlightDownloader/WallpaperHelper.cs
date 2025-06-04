@@ -32,6 +32,7 @@ namespace SpotlightDownloader
             catch (Exception ex)
             {
                 return (false, $"Exception: {ex.Message}");
+                throw;
             }
         }
     }
