@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -93,9 +94,9 @@ namespace SpotlightDownloader
                 if (parsed.AllLocales)
                 {
                     remainingLocales = new Queue<string>(Locales.AllKnownSpotlightLocales);
-                    await Console.Error.WriteLineAsync(string.Format("Starting download using {0} locales", remainingLocales.Count)).ConfigureAwait(false);
+                    await Console.Error.WriteLineAsync(string.Format(CultureInfo.InvariantCulture, "Starting download using {0} locales", remainingLocales.Count)).ConfigureAwait(false);
                     parsed.Locale = remainingLocales.Dequeue();
-                    await Console.Error.WriteLineAsync(string.Format("Switching to {0} - {1} locales remaining", parsed.Locale, remainingLocales.Count + 1)).ConfigureAwait(false);
+                    await Console.Error.WriteLineAsync(string.Format(CultureInfo.InvariantCulture, "Switching to {0} - {1} locales remaining", parsed.Locale, remainingLocales.Count + 1)).ConfigureAwait(false);
                 }
 
                 int downloadCount = 0;
@@ -163,6 +164,7 @@ namespace SpotlightDownloader
                                     {
                                         await Console.Error.WriteLineAsync("Failed to set wallpaper: " + e.Message).ConfigureAwait(false);
                                         Environment.Exit(4);
+                                        throw;
                                     }
                                 }
                                 else if (parsed.Action == "lockscreen")
@@ -179,6 +181,7 @@ namespace SpotlightDownloader
                                     {
                                         await Console.Error.WriteLineAsync("Failed to set lockscreen: " + e.Message).ConfigureAwait(false);
                                         Environment.Exit(4);
+                                        throw;
                                     }
                                 }
                                 Environment.Exit(0);
@@ -220,6 +223,7 @@ namespace SpotlightDownloader
                         {
                             await Console.Error.WriteLineAsync(e.GetType() + ": " + e.Message).ConfigureAwait(false);
                             Environment.Exit(3);
+                            throw;
                         }
                     }
                     catch (Exception)
@@ -236,7 +240,7 @@ namespace SpotlightDownloader
                     {
                         noNewImgCount = 0;
                         parsed.Locale = remainingLocales.Dequeue();
-                        await Console.Error.WriteLineAsync(string.Format("Switching to {0} - {1} locales remaining", parsed.Locale, remainingLocales.Count + 1)).ConfigureAwait(false);
+                        await Console.Error.WriteLineAsync(string.Format(CultureInfo.InvariantCulture, "Switching to {0} - {1} locales remaining", parsed.Locale, remainingLocales.Count + 1)).ConfigureAwait(false);
                     }
 
                 } while (parsed.DownloadMany && (downloadCount > 0 || noNewImgCount < 50) && parsed.DownloadAmount > 0);
@@ -262,6 +266,7 @@ namespace SpotlightDownloader
             {
                 await Console.Error.WriteLineAsync(e.GetType() + ": " + e.Message).ConfigureAwait(false);
                 Environment.Exit(2);
+                throw;
             }
         }
     }
