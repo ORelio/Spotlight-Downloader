@@ -245,6 +245,7 @@ namespace SpotlightDownloader
                 }
             }
 
+            var uniqueImages = new List<SpotlightImage>();
         }
     }
 }
