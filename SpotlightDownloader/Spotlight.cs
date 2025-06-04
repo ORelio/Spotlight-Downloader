@@ -119,7 +119,7 @@ namespace SpotlightDownloader
         /// <param name="attempts">Amount of API call attempts before raising an exception if an error occurs</param>
         /// <returns>List of images</returns>
         /// <exception cref="System.Net.WebException">An exception is thrown if the request fails</exception>
-        /// <exception cref="System.IO.InvalidDataException">An exception is thrown if the JSON data is invalid</exception>
+        /// <exception cref="InvalidDataException">An exception is thrown if the JSON data is invalid</exception>
         public static async Task<SpotlightImage[]> GetImageUrlsAsync(bool maxres = false, bool? portrait = null, string locale = null, int attempts = 1, ApiVersion apiver = ApiVersion.v4)
         {
             while (true)
@@ -133,7 +133,7 @@ namespace SpotlightDownloader
                 {
                     if (attempts > 0)
                     {
-                        await Console.Error.WriteLineAsync("SpotlightAPI: " + e.GetType() + ": " + e.Message + " - Waiting 10 seconds before retrying...").ConfigureAwait(false);
+                        await Console.Error.WriteLineAsync($"SpotlightAPI: {e.GetType()}: {e.Message} - Waiting 10 seconds before retrying...").ConfigureAwait(false);
                         await Task.Delay(TimeSpan.FromSeconds(10)).ConfigureAwait(false);
                     }
                     else throw;

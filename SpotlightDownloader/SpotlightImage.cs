@@ -30,7 +30,7 @@ namespace SpotlightDownloader
         /// <returns>Metadata file location</returns>
         public static string GetMetaLocation(string imagePath)
         {
-            return Path.Combine(Path.GetDirectoryName(imagePath), Path.GetFileNameWithoutExtension(imagePath) + ".txt");
+            return Path.Combine(Path.GetDirectoryName(imagePath), Path.GetFileNameWithoutExtension($"{imagePath}.txt"));
         }
 
         /// <summary>
@@ -81,7 +81,7 @@ namespace SpotlightDownloader
                 }
                 return image;
             }
-            else throw new InvalidDataException("Not a SpotlightImage metadata file: " + metadataFile);
+            else throw new InvalidDataException($"{MetaHeader}: Not a SpotlightImage metadata file: {metadataFile}");
         }
 
         /// <summary>
@@ -150,7 +150,7 @@ namespace SpotlightDownloader
                 {
                     if (attempts > 0)
                     {
-                        Console.Error.WriteLine("SpotlightImage: " + e.GetType() + ": " + e.Message + " - Waiting 10 seconds before retrying...");
+                        Console.Error.WriteLine($"{MetaHeader}: {e.GetType()}: {e.Message} - Waiting 10 seconds before retrying...");
                         Thread.Sleep(TimeSpan.FromSeconds(10));
                     }
                     else throw;
@@ -173,13 +173,34 @@ namespace SpotlightDownloader
         {
             string outputFile = GetFilePath(outputDir, outputName);
 
+            long? expectedContentLength = null;
+
             using (HttpClient client = new())
             using (HttpResponseMessage response = client.GetAsync(new Uri(Uri), HttpCompletionOption.ResponseHeadersRead).Result)
             {
                 response.EnsureSuccessStatusCode();
+
+                // Get Content-Length header if available
+                if (response.Content.Headers.ContentLength.HasValue)
+                {
+                    expectedContentLength = response.Content.Headers.ContentLength.Value;
+                }
+
                 using Stream stream = response.Content.ReadAsStreamAsync().Result;
                 using FileStream fileStream = new(outputFile, FileMode.Create, FileAccess.Write, FileShare.None);
                 stream.CopyTo(fileStream);
+            }
+
+            if (expectedContentLength.HasValue)
+            {
+                long actualFileSize = new FileInfo(outputFile).Length;
+                if (actualFileSize != expectedContentLength.Value)
+                {
+                    File.Delete(outputFile);
+                    throw new InvalidDataException(
+                        $"SpotlightImage: Downloaded file size does not match HTTP Content-Length: {Uri} - Expected: {expectedContentLength.Value}, Actual: {actualFileSize}"
+                    );
+                }
             }
 
             if (integrityCheck)
@@ -187,7 +208,7 @@ namespace SpotlightDownloader
                 if (FileSize != null && new FileInfo(outputFile).Length != FileSize.Value)
                 {
                     File.Delete(outputFile);
-                    throw new InvalidDataException("SpotlightImage: File returned by server does not have the expected size: " + Uri + " - Expected size: " + FileSize.Value);
+                    throw new InvalidDataException($"SpotlightImage: File returned by server does not have the expected size: {Uri} - Expected size: {FileSize.Value}");
                 }
                 if (Sha256 != null)
                 {
@@ -198,7 +219,7 @@ namespace SpotlightDownloader
                     if (hashString != Sha256)
                     {
                         File.Delete(outputFile);
-                        throw new InvalidDataException("SpotlightImage: File returned by server does not have the expected sha256 hash: " + Uri + " - Expected Hash: " + Sha256);
+                        throw new InvalidDataException($"SpotlightImage: File returned by server does not have the expected sha256 hash: {Uri} - Expected Hash: {Sha256}");
                     }
                 }
                 if (FileSize == null || Sha256 == null)
@@ -210,7 +231,7 @@ namespace SpotlightDownloader
                     }
                     catch (Exception e)
                     {
-                        throw new InvalidDataException("SpotlightImage: File returned by server does not seems to be a valid image: " + Uri + " - " + e.GetType() + ": " + e.Message);
+                        throw new InvalidDataException($"SpotlightImage: File returned by server does not seems to be a valid image: {Uri} - {e.GetType()}: {e.Message}");
                     }
                 }
             }
@@ -220,12 +241,12 @@ namespace SpotlightDownloader
                 string outputMeta = GetFilePath(outputDir, outputName, ".txt");
                 File.WriteAllLines(outputMeta, [
                     MetaHeader,
-                    "uri=" + Uri,
-                    "sha256=" + Sha256,
-                    "filesize=" + FileSize,
-                    "filename=" + FileName,
-                    "title=" + Title,
-                    "copyright=" + Copyright
+                    $"uri={Uri}",
+                    $"sha256={Sha256}",
+                    $"filesize={FileSize}",
+                    $"filename={FileName}",
+                    $"title={Title}",
+                    $"copyright={Copyright}"
                 ], Encoding.UTF8);
             }
 

@@ -29,13 +29,13 @@ namespace SpotlightDownloader
                 if (ex.Message == "Show help")
                 {
                     foreach (string str in new[]{
-                        " ==== " + Name + " v" + Version + " - https://github.com/ORelio/Spotlight-Downloader ====",
+                        $" ==== {Name} v{Version} - https://github.com/ORelio/Spotlight-Downloader ====",
                         "",
                         "Retrieve Windows Spotlight images by requesting the Microsoft Spotlight API.",
-                        Name + " can also define images as wallpaper and system-wide lockscreen image.",
+                        $"{Name} can also define images as wallpaper and system-wide lockscreen image.",
                         "",
                         "Usage:",
-                        "  " + Name + ".exe <action> [arguments]",
+                        $"  {Name}.exe <action> [arguments]",
                         "  Only one action must be provided, as first argument",
                         "  Then, provide any number of arguments from the list below.",
                         "",
@@ -94,9 +94,9 @@ namespace SpotlightDownloader
                 if (parsed.AllLocales)
                 {
                     remainingLocales = new Queue<string>(Locales.AllKnownSpotlightLocales);
-                    await Console.Error.WriteLineAsync(string.Format(CultureInfo.InvariantCulture, "Starting download using {0} locales", remainingLocales.Count)).ConfigureAwait(false);
+                    await Console.Error.WriteLineAsync($"Starting download using {remainingLocales.Count} locales").ConfigureAwait(false);
                     parsed.Locale = remainingLocales.Dequeue();
-                    await Console.Error.WriteLineAsync(string.Format(CultureInfo.InvariantCulture, "Switching to {0} - {1} locales remaining", parsed.Locale, remainingLocales.Count + 1)).ConfigureAwait(false);
+                    await Console.Error.WriteLineAsync($"Switching to {parsed.Locale} - {remainingLocales.Count + 1} locales remaining").ConfigureAwait(false);
                 }
 
                 int downloadCount = 0;
@@ -112,7 +112,7 @@ namespace SpotlightDownloader
 
                         if (images.Length < 1)
                         {
-                            await Console.Error.WriteLineAsync(Name + " received an empty image set from Spotlight API.").ConfigureAwait(false);
+                            await Console.Error.WriteLineAsync($"{Name} received an empty image set from Spotlight API.").ConfigureAwait(false);
                             Environment.Exit(2);
                         }
 
@@ -204,15 +204,15 @@ namespace SpotlightDownloader
                                     }
                                     catch (InvalidDataException)
                                     {
-                                        await Console.Error.WriteLineAsync("Skipping invalid image: " + image.Uri).ConfigureAwait(false);
+                                        await Console.Error.WriteLineAsync($"Skipping invalid image: {image.Uri}").ConfigureAwait(false);
                                     }
                                 }
                             }
 
                             if (parsed.Verbose)
                             {
-                                await Console.Error.WriteLineAsync("Successfully downloaded: " + downloadCount + " images.").ConfigureAwait(false);
-                                await Console.Error.WriteLineAsync("Already downloaded: " + (images.Length - downloadCount) + " images.").ConfigureAwait(false);
+                                await Console.Error.WriteLineAsync($"Successfully downloaded: {downloadCount} images.").ConfigureAwait(false);
+                                await Console.Error.WriteLineAsync($"Already downloaded: {images.Length - downloadCount} images.").ConfigureAwait(false);
                             }
 
                             if (downloadCount == 0)
@@ -221,7 +221,7 @@ namespace SpotlightDownloader
                         }
                         catch (Exception e)
                         {
-                            await Console.Error.WriteLineAsync(e.GetType() + ": " + e.Message).ConfigureAwait(false);
+                            await Console.Error.WriteLineAsync($"{e.GetType()}: {e.Message}").ConfigureAwait(false);
                             Environment.Exit(3);
                             throw;
                         }
@@ -240,7 +240,7 @@ namespace SpotlightDownloader
                     {
                         noNewImgCount = 0;
                         parsed.Locale = remainingLocales.Dequeue();
-                        await Console.Error.WriteLineAsync(string.Format(CultureInfo.InvariantCulture, "Switching to {0} - {1} locales remaining", parsed.Locale, remainingLocales.Count + 1)).ConfigureAwait(false);
+                        await Console.Error.WriteLineAsync($"Switching to {parsed.Locale} - {remainingLocales.Count + 1} locales remaining").ConfigureAwait(false);
                     }
 
                 } while (parsed.DownloadMany && (downloadCount > 0 || noNewImgCount < 50) && parsed.DownloadAmount > 0);
@@ -264,7 +264,7 @@ namespace SpotlightDownloader
             }
             catch (Exception e)
             {
-                await Console.Error.WriteLineAsync(e.GetType() + ": " + e.Message).ConfigureAwait(false);
+                await Console.Error.WriteLineAsync($"{e.GetType()}: {e.Message}").ConfigureAwait(false);
                 Environment.Exit(2);
                 throw;
             }
