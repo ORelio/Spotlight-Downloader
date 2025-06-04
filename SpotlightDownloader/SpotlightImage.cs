@@ -2,6 +2,7 @@
 using System.Drawing;
 using System.IO;
 using System.Net;
+using System.Net.Http;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading;
@@ -113,7 +114,7 @@ namespace SpotlightDownloader
                     if (extension == null)
                     {
                         string extensionTmp = Path.GetExtension(FileName);
-                        if (!String.IsNullOrEmpty(extensionTmp))
+                        if (!string.IsNullOrEmpty(extensionTmp))
                             extension = extensionTmp;
                     }
                 }
@@ -172,9 +173,13 @@ namespace SpotlightDownloader
         {
             string outputFile = GetFilePath(outputDir, outputName);
 
-            using (WebClient client = new())
+            using (HttpClient client = new())
+            using (HttpResponseMessage response = client.GetAsync(new Uri(Uri), HttpCompletionOption.ResponseHeadersRead).Result)
             {
-                client.DownloadFile(Uri, outputFile);
+                response.EnsureSuccessStatusCode();
+                using Stream stream = response.Content.ReadAsStreamAsync().Result;
+                using FileStream fileStream = new(outputFile, FileMode.Create, FileAccess.Write, FileShare.None);
+                stream.CopyTo(fileStream);
             }
 
             if (integrityCheck)
@@ -187,7 +192,8 @@ namespace SpotlightDownloader
                 if (Sha256 != null)
                 {
                     using FileStream fileStream = File.OpenRead(outputFile);
-                    byte[] hash = new SHA256Managed().ComputeHash(fileStream);
+                    using var sha256 = SHA256.Create();
+                    byte[] hash = sha256.ComputeHash(fileStream);
                     string hashString = Convert.ToBase64String(hash);
                     if (hashString != Sha256)
                     {
