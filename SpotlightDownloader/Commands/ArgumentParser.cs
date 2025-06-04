@@ -67,7 +67,7 @@ namespace SpotlightDownloader.Commands
                                 parsed.Locale = args[i];
                             else
                                 throw new ArgumentException("--locale expects an additional argument.");
-                            if (!MyRegex().Match(parsed.Locale).Success)
+                            if (!LocaleRegex().Match(parsed.Locale).Success)
                                 Console.Error.WriteLine($"--locale expected format is xx-XX, e.g. en-US. Locale '{parsed.Locale}' might not work.");
                             break;
                         case "--all-locales":
@@ -177,6 +177,6 @@ namespace SpotlightDownloader.Commands
         }
 
         [GeneratedRegex("^[a-z]{2}-[A-Z]{2}$")]
-        private static partial Regex MyRegex();
+        private static partial Regex LocaleRegex();
     }
 }
