@@ -10,7 +10,7 @@ namespace SpotlightDownloader
     /// <summary>
     /// Download Microsoft Spotlight images - By ORelio (c) 2018-2024 - CDDL 1.0
     /// </summary>
-    class Program
+    sealed class Program
     {
         public const string Name = "SpotlightDL";
         public const string Version = "1.5.0";
@@ -148,7 +148,7 @@ namespace SpotlightDownloader
                                 {
                                     try
                                     {
-                                        Desktop.SetWallpaper(imageFile);
+                                        WallpaperHelper.SetWallpaper(imageFile);
 #pragma warning disable CA1303
                                         // no plans for localization yet so temporary disable CA1303
                                         Console.WriteLine("Wallpaper set successfully.");
@@ -164,7 +164,7 @@ namespace SpotlightDownloader
                                 {
                                     try
                                     {
-                                        Lockscreen.SetLockScreen(imageFile).GetAwaiter().GetResult();
+                                        LockScreenHelper.SetLockScreen(imageFile).GetAwaiter().GetResult();
 #pragma warning disable CA1303
                                         // no plans for localization yet so temporary disable CA1303
                                         Console.WriteLine("Lockscreen set successfully.");

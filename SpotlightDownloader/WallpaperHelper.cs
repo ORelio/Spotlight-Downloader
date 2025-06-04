@@ -3,7 +3,7 @@ using System.Runtime.InteropServices;
 
 namespace SpotlightDownloader
 {
-    internal static class Desktop
+    internal static class WallpaperHelper
     {
         [DllImport("user32.dll", CharSet = CharSet.Unicode)]
         [DefaultDllImportSearchPaths(DllImportSearchPath.System32)]

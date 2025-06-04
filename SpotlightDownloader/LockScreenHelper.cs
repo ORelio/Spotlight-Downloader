@@ -6,7 +6,7 @@ using Windows.System.UserProfile;
 
 namespace SpotlightDownloader
 {
-    class Lockscreen
+    static class LockScreenHelper
     {
         /// <summary>
         /// Replace the system lockscreen image for Windows 10 and later.
