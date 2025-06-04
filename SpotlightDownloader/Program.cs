@@ -177,7 +177,7 @@ namespace SpotlightDownloader
                                     }
                                     catch (Exception e)
                                     {
-                                        await Console.Error.WriteLineAsync("Failed to set lockscreen: " + e.GetType() + ": " + e.Message).ConfigureAwait(false);
+                                        await Console.Error.WriteLineAsync("Failed to set lockscreen: " + e.Message).ConfigureAwait(false);
                                         Environment.Exit(4);
                                     }
                                 }
