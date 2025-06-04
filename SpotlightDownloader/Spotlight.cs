@@ -245,7 +245,6 @@ namespace SpotlightDownloader
                 }
             }
 
-            return [.. images];
         }
     }
 }
