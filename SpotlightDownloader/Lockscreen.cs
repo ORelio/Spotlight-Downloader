@@ -1,7 +1,8 @@
 ﻿using System;
+using System.Threading.Tasks;
+
 using Windows.Storage;
 using Windows.System.UserProfile;
-using System.Threading.Tasks;
 
 namespace SpotlightDownloader
 {
