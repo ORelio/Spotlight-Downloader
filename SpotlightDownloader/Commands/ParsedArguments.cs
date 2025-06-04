@@ -1,6 +1,6 @@
 namespace SpotlightDownloader.Commands
 {
-    internal class ParsedArguments
+    internal sealed class ParsedArguments
     {
         public string Action { get; set; }
         public bool SingleImage { get; set; }

@@ -12,7 +12,7 @@ namespace SpotlightDownloader
     /// <summary>
     /// Represents a Spotlight image
     /// </summary>
-    class SpotlightImage
+    sealed class SpotlightImage
     {
         private const string MetaHeader = "[SpotlightImage]";
 
