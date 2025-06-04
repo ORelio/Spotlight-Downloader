@@ -27,7 +27,7 @@ namespace SpotlightDownloader
                 if (ex.Message == "Show help")
                 {
                     foreach (string str in new[]{
-                        " ==== " + Name + " v" + Version + " - By ORelio and its contributors - Microzoom.fr ====",
+                        " ==== " + Name + " v" + Version + " - https://github.com/ORelio/Spotlight-Downloader ====",
                         "",
                         "Retrieve Windows Spotlight images by requesting the Microsoft Spotlight API.",
                         Name + " can also define images as wallpaper and system-wide lockscreen image.",
