@@ -1,7 +1,7 @@
-﻿========================================================
-==== SpotlightDL v1.5.0 - Par ORelio - Microzoom.fr ====
-==== https://github.com/ORelio/Spotlight-Downloader ====
-========================================================
+﻿================================================================
+==== SpotlightDL v2.0.0 - Par ORelio & Contributeurs GitHub ====
+======= https://github.com/ORelio/Spotlight-Downloader =========
+================================================================
 
 Merci d'avoir téléchargé SpotlightDL!
 
@@ -9,10 +9,9 @@ Ce programme permet de récupérer les images de "Windows à la une" directement
 SpotlightDL peut également définir des images en tant que fond d'écran ou sur l'écran de verouillage global.
 
 Ce programme est utile dans les cas suivants :
- - Télécharger toute la bibliothèque d'images en définition maximale, avec fichiers de métadonnées
- - Définir les images en tant que fond d'écran, non seulement sous Windows 11 mais aussi sur les versions précédentes
- - Définir les images sur l'écran de verouillage global sous Windows 7/8/10/11, sans les publicités sous Windows 10/11
- - Utiliser SpotlightDL dans vos propres scripts et programmes en appelant la fonction récupérant les URL des images
+ - Télécharger une grande partie de la bibliothèque d'images en définition maximale, avec fichiers de métadonnées
+ - Définir les images en tant que fond d'écran ou écran de verrouillage en retirant les publicités
+ - Utiliser SpotlightDL dans vos propres scripts et programmes en utilisant le mode URL
 
 =============
  Utilisation
@@ -34,9 +33,9 @@ update-archive-and-wallpaper
   Cela permet d'archiver les images au fur et à mesure sans envoyer beaucoup de requêtes API.
 
 update-archive-and-lockscreen
-  Même fonctionnement qu'update-archive-and-wallpaper mais change l'écran de verouillage global.
-  Ce script doit être lancé en tant qu'administrateur car il remplace une image dans le dossier Windows
-  et vide le cache de l'écran de verouillage afin d'en forcer la mise à jour immédiate.
+  Même fonctionnement qu'update-archive-and-wallpaper mais change l'écran de verouillage.
+  Si lancé en tant qu'administrateur sur une édition Entreprise ou Education de Windows,
+  le script change également l'écran de verrouillage global grâce à la fonction de stratégie de groupe.
 
 update-wallpaper
   Ce script maintient un cache de quelques images et en définit une au hasard en tant que fond d'écran.
@@ -44,13 +43,13 @@ update-wallpaper
   Les images sont téléchargées pour votre définition d'écran, et les plus anciennes sont supprimées du cache.
 
 update-lockscreen
-  Même fonctionnement qu'update-wallpaper mais définit l'image en tant qu'écran de verouillage global.
-  Ce script doit être lancé en tant qu'administrateur car il remplace une image dans le dossier Windows
-  et vide le cache de l'écran de verouillage afin d'en forcer la mise à jour immédiate.
+  Même fonctionnement qu'update-wallpaper mais définit l'image en tant qu'écran de verouillage.
+  Si lancé en tant qu'administrateur sur une édition Entreprise ou Education de Windows,
+  le script change également l'écran de verrouillage global grâce à la fonction de stratégie de groupe.
 
 restore-lockscreen
   Ce script restaure l'écran de verrouillage par défaut.
-  Il requiert les droits administrateur.
+  Si lancé en administrateur, il supprime aussi les stratégies définies pour l'écran de verrouillage global.
 
 generate-manual
   Ce script sauvegarde le mode d'emploi en ligne de commande dans un fichier texte,
@@ -112,14 +111,15 @@ Cliquez sur OK pour sauvegarder votre tâche.
  FAQ
 =====
 
-Q: L'écran de verrouillage n'apparaît pas lorsque j'ai ouvert ma session ?
-R: Assurez-vous que l'image est également sélectionnée dans vos paramètres personnels d'écran de verouillage.
-
 Q: Combien d'images sont téléchargées par défaut ? (càd sans les arguments --single ou --many)
 R: Par défaut, la liste d'images retournées par un seul appel API: actuellement 4.
 
 Q: Certaines images n'ont pas de titre ou de copyright dans leur métadonnées?
 R: Ces informations ne sont pas fournies pour toutes les images au niveau de l'API Windows à la une.
+
+Q: L'écran de verrouillage n'apparaît pas lorsque je n'ai pas ouvert ma session ?
+R: L'image de l'écran système ne peut être configurée que sur les éditions Entreprise ou Education de Windows.
+R: Si vous avez une édition Education ou Entreprise, assurez-vous de lancer les scripts en tant qu'admin.
 
 Q: Je ne veux pas du titre de l'image sur mon fond d'écran ou écran de verrouillage. Comment l'enlever ?
 R: Modifiez le fichier batch que vous utilisez pour enlever le paramètre --embed-meta dans la commande associée.
@@ -152,6 +152,6 @@ Spotlight Downloader a été conçu en utilisant les ressources suivantes :
  - Etudes de l'API Spotlight par KoalaBR, Biswa96 et ORelio
  - Police Agency FB par Microsoft Corporation (Logo)
 
-+--------------------+
-| © 2018-2024 ORelio |
-+--------------------+
++-------------------------------------------+
+| © 2018-2025 ORelio & Contributeurs GitHub |
++-------------------------------------------+

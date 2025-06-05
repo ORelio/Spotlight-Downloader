@@ -1,7 +1,7 @@
-﻿=======================================================
-==== SpotlightDL v1.5.0 - By ORelio - Microzoom.fr ====
-==== https://github.com/ORelio/Spotlight-Downloader ===
-=======================================================
+﻿==============================================================
+==== SpotlightDL v2.0.0 - By ORelio & GitHub contributors ====
+======= https://github.com/ORelio/Spotlight-Downloader =======
+==============================================================
 
 Thanks for dowloading SpotlightDL!
 
@@ -9,10 +9,9 @@ This program can retrieve Windows Spotlight images by requesting the Microsoft S
 SpotlightDL can also define images as wallpaper and system-wide lockscreen image.
 
 It is useful in the following use cases:
- - Download the whole Spotlight library with maximum image resolution and metadata
- - Define Spotlight images as wallpaper, not only on Windows 11 but also on previous versions
- - Define Spotlight images as global lock screen on Windows 7/8/10/11, without ads on Windows 10/11
- - Chain SpotlightDL with your own scripts and apps by taking advantage of the url mode
+ - Download most of the Spotlight library with maximum image resolution and metadata
+ - Define Spotlight images as ad-less wallpaper and lockscreen
+ - Chain SpotlightDL with your own scripts and apps using the url mode
 
 ============
  How to use
@@ -34,9 +33,9 @@ update-archive-and-wallpaper
   This allows to gradually download images without hammering the Spotlight API.
 
 update-archive-and-lockscreen
-  Same as update-archive-and-wallpaper but updates the system-wide lockscreen.
-  This script must be run as administrator as it replaces an image in the
-  Windows folder and clear the lockscreen cache to force a lockscreen refresh.
+  Same as update-archive-and-wallpaper but updates the lockscreen image.
+  If run as administrator under Enterprise or Education editions, it can also
+  update the global lockscreen image by taking advantage of the group policy feature.
 
 update-wallpaper
   This script maintains a cache of several Spotlight pictures tailored to your screen
@@ -45,12 +44,12 @@ update-wallpaper
 
 update-lockscreen
   Same as update-wallpaper but defines images as system-wide lockscreen
-  This script must be run as administrator as it replaces an image in the
-  Windows folder and clear the lockscreen cache to force a lockscreen refresh.
+  If run as administrator under Enterprise or Education editions, it can also
+  update the global lockscreen image by taking advantage of the group policy feature.
 
 restore-lockscreen
   This script restores the default lockscreen image.
-  This script must be run as administrator.
+  If launched as administrator, it also removes policies set for the global lock screen.
 
 generate-manual
   This script saves usage info as a text file for your convenience,
@@ -110,14 +109,15 @@ Click OK to save your task.
  FAQ
 =====
 
-Q: The lockscreen does not appear when I am logged on?
-R: Make sure the image is also selected in your personal lock screen settings.
-
 Q: How many images are downloaded when using default mode? (i.e. without using --single or --many)
 R: Default mode downloads a list of images returned by a single API call: currently 4.
 
 Q: Some images do not have a title or copyright in their metadata?
 R: Those fields are not provided for all images by the Spotlight API.
+
+Q: The lockscreen image does not appear when I am not logged on?
+R: System lockscreen can only be set on Enterprise and Education editions through group policy.
+R: If you have an Enterprise or Education version, make sure to run the lockscreen scripts as admin.
 
 Q: I do not want to have the image title inside my wallpaper or lockscreen. How to remove it?
 R: Edit the batch file you want to use and remove --embed-meta inside the corresponding command.
@@ -150,6 +150,6 @@ The Spotlight Downloader program has been created using the following resources:
  - Spotlight API studies by KoalaBR, Biswa96 & ORelio
  - Agency FB font family by Microsoft Corporation (Logo)
 
-+--------------------+
-| © 2018-2024 ORelio |
-+--------------------+
++------------------------------------------+
+| © 2018-2025 ORelio & GitHub contributors |
++------------------------------------------+

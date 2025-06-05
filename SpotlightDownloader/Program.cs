@@ -9,12 +9,12 @@ using SpotlightDownloader.CommandLineHelper;
 namespace SpotlightDownloader
 {
     /// <summary>
-    /// Download Microsoft Spotlight images - By ORelio (c) 2018-2024 - CDDL 1.0
+    /// Download Microsoft Spotlight images - By ORelio & Contributors (c) 2018-2025 - CDDL 1.0
     /// </summary>
     sealed class Program
     {
         public const string Name = "SpotlightDL";
-        public const string Version = "1.5.0";
+        public const string Version = "2.0.0";
 
         static async Task Main(string[] args)
         {
