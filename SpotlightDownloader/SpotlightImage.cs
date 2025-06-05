@@ -6,6 +6,7 @@ using System.Net.Http;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
+using System.Runtime.InteropServices;
 
 namespace SpotlightDownloader
 {
@@ -251,6 +252,182 @@ namespace SpotlightDownloader
             }
 
             return outputFile;
+        }
+
+        /// <summary>
+        /// Load an input image, adjust to screen res, embed metadata using current desktop scaling factor and save the result into a new image file
+        /// </summary>
+        /// <param name="inputImageFile">Input image file</param>
+        /// <param name="outputDir">Output directory</param>
+        /// <param name="outputName">Output file name</param>
+        /// <param name="adjustToScreen">Auto adjust image to current screen resolution</param>
+        /// <param name="adjustToScaling">Auto adjust text to current UI scaling factor to avoid blurry text</param>
+        /// <returns>Output file path</returns>
+        public static string EmbedMetadata(string inputImageFile, string outputDir, string outputName, bool adjustToScreen = true, bool adjustToScaling = true)
+        {
+            string fileExtension = ".png";
+            var imageFormat = System.Drawing.Imaging.ImageFormat.Png;
+
+            if (string.IsNullOrEmpty(outputName))
+                outputName = Path.GetFileNameWithoutExtension(inputImageFile);
+            string outputFile = Path.Combine(outputDir, outputName + fileExtension);
+
+            Image img = Image.FromFile(inputImageFile);
+
+            if (adjustToScreen)
+            {
+                // Crop image to get correct aspect ratio, optionally downscaling it if screen is smaller
+                Rectangle screen = System.Windows.Forms.Screen.PrimaryScreen.Bounds;
+                Image img2 = FixedImageResize(img, screen.Width, screen.Height, true);
+                img.Dispose();
+                img = img2;
+
+                if (adjustToScaling && (img.Width < screen.Width || img.Height < screen.Height))
+                {
+                    // Source image was smaller than screen: Upscale it to avoid blurry text
+                    img2 = SimpleImageResize(img, screen.Width, screen.Height);
+                    img.Dispose();
+                    img = img2;
+                }
+            }
+
+            string metadataFile = GetMetaLocation(inputImageFile);
+            if (File.Exists(metadataFile))
+            {
+                SpotlightImage meta = LoadMeta(metadataFile);
+                Graphics gfx = Graphics.FromImage(img);
+
+                gfx.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
+                gfx.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.HighQualityBicubic;
+                gfx.PixelOffsetMode = System.Drawing.Drawing2D.PixelOffsetMode.HighQuality;
+
+                int fontSize = 11;
+                if (adjustToScaling)
+                    fontSize = (int)(fontSize * GetScalingFactor());
+                using Font font = new("Segoe UI Semilight", fontSize);
+                SizeF titleSize = gfx.MeasureString(meta.Title, font);
+                if (titleSize.Width < img.Size.Width - 20)
+                {
+                    gfx.DrawString(
+                        meta.Title,
+                        font,
+                        Brushes.White,
+                        new Rectangle(
+                            img.Size.Width - 10 - (int)Math.Ceiling(titleSize.Width),
+                            10,
+                            (int)Math.Ceiling(titleSize.Width),
+                            (int)Math.Ceiling(titleSize.Height)
+                        )
+                    );
+                    gfx.Flush();
+                }
+            }
+
+            img.Save(outputFile, imageFormat);
+            img.Dispose();
+
+            return outputFile;
+        }
+
+        /// <summary>
+        /// Resize image to a fixed destination size while preserving aspect ratio
+        /// </summary>
+        /// <remarks>Source: stackoverflow.com/questions/10323633/</remarks>
+        /// <param name="image">Input image</param>
+        /// <param name="Width">Desized Width</param>
+        /// <param name="Height">Desized Height</param>
+        /// <param name="needToFill">True = crop to fill, False = fit inside</param>
+        /// <returns>Output image</returns>
+        private static Bitmap FixedImageResize(Image image, int Width, int Height, bool needToFill)
+        {
+            int sourceWidth = image.Width;
+            int sourceHeight = image.Height;
+            int sourceX = 0;
+            int sourceY = 0;
+            double destX = 0;
+            double destY = 0;
+            double nScaleW = Width / (double)sourceWidth;
+            double nScaleH = Height / (double)sourceHeight;
+
+            double nScale;
+            if (!needToFill)
+            {
+                nScale = Math.Min(nScaleH, nScaleW);
+            }
+            else
+            {
+                nScale = Math.Max(nScaleH, nScaleW);
+                destY = (Height - sourceHeight * nScale) / 2;
+                destX = (Width - sourceWidth * nScale) / 2;
+            }
+
+            if (nScale > 1)
+                nScale = 1;
+
+            int destWidth = (int)Math.Round(sourceWidth * nScale);
+            int destHeight = (int)Math.Round(sourceHeight * nScale);
+
+            Bitmap bmPhoto;
+            try
+            {
+                bmPhoto = new Bitmap(destWidth + (int)Math.Round(2 * destX), destHeight + (int)Math.Round(2 * destY));
+            }
+            catch (Exception ex)
+            {
+                throw new ArgumentException($"destWidth:{destWidth}, destX:{destX}, destHeight:{destHeight}, desxtY:{destY}, Width:{Width}, Height:{Height}", ex);
+            }
+
+            using Graphics grPhoto = Graphics.FromImage(bmPhoto);
+            grPhoto.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.HighQualityBicubic;
+            grPhoto.CompositingQuality = System.Drawing.Drawing2D.CompositingQuality.HighQuality;
+            grPhoto.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.HighQuality;
+
+            Rectangle to = new((int)Math.Round(destX), (int)Math.Round(destY), destWidth, destHeight);
+            Rectangle from = new(sourceX, sourceY, sourceWidth, sourceHeight);
+            //Console.WriteLine("From: " + from.ToString());
+            //Console.WriteLine("To: " + to.ToString());
+            grPhoto.DrawImage(image, to, from, GraphicsUnit.Pixel);
+
+            return bmPhoto;
+        }
+
+        /// <summary>
+        /// Resize image to a fixed destination size without preserving aspect ratio
+        /// </summary>
+        /// <param name="image">Input image</param>
+        /// <param name="Width">Destination Width</param>
+        /// <param name="Height">Destination Height</param>
+        private static Bitmap SimpleImageResize(Image image, int Width, int Height)
+        {
+            Bitmap bmPhoto = new(Width, Height);
+
+            using Graphics grPhoto = Graphics.FromImage(bmPhoto);
+            grPhoto.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.HighQualityBicubic;
+            grPhoto.CompositingQuality = System.Drawing.Drawing2D.CompositingQuality.HighQuality;
+            grPhoto.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.HighQuality;
+            Rectangle to = new(0, 0, Width, Height);
+            Rectangle from = new(0, 0, image.Width, image.Height);
+            grPhoto.DrawImage(image, to, from, GraphicsUnit.Pixel);
+            return bmPhoto;
+        }
+
+        [DllImport("gdi32.dll", CharSet = CharSet.Unicode)]
+        [DefaultDllImportSearchPaths(DllImportSearchPath.System32)]
+        static extern int GetDeviceCaps(IntPtr hdc, int nIndex);
+        enum DeviceCap
+        {
+            VERTRES = 10,
+            DESKTOPVERTRES = 117,
+        }
+
+        public static float GetScalingFactor()
+        {
+            Graphics g = Graphics.FromHwnd(IntPtr.Zero);
+            IntPtr desktop = g.GetHdc();
+            int LogicalScreenHeight = GetDeviceCaps(desktop, (int)DeviceCap.VERTRES);
+            int PhysicalScreenHeight = GetDeviceCaps(desktop, (int)DeviceCap.DESKTOPVERTRES);
+            float ScreenScalingFactor = PhysicalScreenHeight / (float)LogicalScreenHeight;
+            return ScreenScalingFactor; // 1.25 = 125%
         }
     }
 }

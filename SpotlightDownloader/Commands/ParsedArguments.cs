@@ -15,7 +15,7 @@ namespace SpotlightDownloader.Commands
         public int CacheSize { get; set; } = int.MaxValue;
         public bool Metadata { get; set; }
         public bool MetadataAllowInconsistent { get; set; }
-        //public bool EmbedMetadata { get; set; }
+        public bool EmbedMetadata { get; set; }
         public string FromFile { get; set; }
         public int ApiTryCount { get; set; } = 3;
         public Spotlight.ApiVersion ApiVersion { get; set; } = Spotlight.ApiVersion.v4;

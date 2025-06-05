@@ -116,9 +116,9 @@ namespace SpotlightDownloader.Commands
                             parsed.Metadata = true;
                             parsed.MetadataAllowInconsistent = true;
                             break;
-                        //case "--embed-meta":
-                        //    parsed.EmbedMetadata = true;
-                        //    break;
+                        case "--embed-meta":
+                            parsed.EmbedMetadata = true;
+                            break;
                         case "--from-file":
                             i++;
                             if (i < args.Length)

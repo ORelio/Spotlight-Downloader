@@ -61,7 +61,7 @@ namespace SpotlightDownloader
                         "  --api-version <v>   Spotlight API version: 3 (Windows 10) or 4 (Windows 11). Default is 4",
                         "  --skip-integrity    Skip integrity check: file size and sha256 (API v3) or parse image (API v4)",
                         "  --metadata          Also save image metadata such as title & copyright as <image-name>.txt",
-                        //"  --embed-meta        When available, embed metadata into wallpaper or lockscreen image",
+                        "  --embed-meta        When available, embed metadata into wallpaper or lockscreen image",
                         "  --from-file         Set the specified file as wallpaper/lockscreen instead of downloading",
                         "  --from-dir          Set a random image from the specified directory as wallpaper/lockscreen",
                         "  --verbose           Display additional status messages while downloading images from API",
