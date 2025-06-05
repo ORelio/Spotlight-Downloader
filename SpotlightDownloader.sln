@@ -1,16 +1,20 @@
 ﻿
-Microsoft Visual Studio Solution File, Format Version 11.00
-# Visual Studio 2010
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.14.36202.13
+MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SpotlightDownloader", "SpotlightDownloader\SpotlightDownloader.csproj", "{A5079FAF-8756-4065-BCF3-A2DECDAC63AF}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
-		Debug|AnyCPU = Debug|AnyCPU
-		Release|AnyCPU = Release|AnyCPU
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{A5079FAF-8756-4065-BCF3-A2DECDAC63AF}.Debug|AnyCPU.ActiveCfg = Debug|AnyCPU
-		{A5079FAF-8756-4065-BCF3-A2DECDAC63AF}.Release|AnyCPU.ActiveCfg = Release|AnyCPU
+		{A5079FAF-8756-4065-BCF3-A2DECDAC63AF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A5079FAF-8756-4065-BCF3-A2DECDAC63AF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A5079FAF-8756-4065-BCF3-A2DECDAC63AF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A5079FAF-8756-4065-BCF3-A2DECDAC63AF}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
