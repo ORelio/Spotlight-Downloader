@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 
 using Windows.Storage;
@@ -15,7 +16,7 @@ namespace SpotlightDownloader
         /// <param name="path">Path to the new .jpg file for lockscreen</param>
         public static async Task<bool> SetLockScreen(string imagePath)
         {
-            if (!PlatformHelper.IsWindows())
+            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
 #pragma warning disable CA1303
                 // no plans for localization yet so temporary disable CA1303

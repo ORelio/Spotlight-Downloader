@@ -18,7 +18,7 @@ namespace SpotlightDownloader
         {
             try
             {
-                if (!PlatformHelper.IsWindows())
+                if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
                     return (false, "Not supported on this platform");
 
                 if (!System.IO.File.Exists(path))
