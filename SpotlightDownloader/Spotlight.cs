@@ -148,7 +148,7 @@ namespace SpotlightDownloader
         {
             List<SpotlightImage> images = [];
             string rawJson = await PerformApiRequestAsync(locale, apiver).ConfigureAwait(false);
-            var root = Json.ParseJson(rawJson);
+            var root = JsonDocument.Parse(rawJson).RootElement;
             // Console.Error.WriteLine("=== RAW JSON RECEIVED FROM SERVER ==="); // debug purposes
             // Console.Error.WriteLine(rawJson); // debug purposes
             // Console.Error.WriteLine("=== END OF RAW JSON ==="); // debug purposes
@@ -170,7 +170,7 @@ namespace SpotlightDownloader
                 }
 
                 // Parse the nested JSON string
-                var item = Json.ParseJson(itemStringElement.GetString());
+                var item = JsonDocument.Parse(itemStringElement.GetString()).RootElement;
 
                 // ApiVersion.v4
                 if (item.TryGetProperty("ad", out var ad))
