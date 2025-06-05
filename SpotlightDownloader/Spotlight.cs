@@ -61,12 +61,12 @@ namespace SpotlightDownloader
         {
             CultureInfo currentCulture = CultureInfo.CurrentCulture;
             RegionInfo currentRegion = new(currentCulture.Name);
-            string region = currentRegion.TwoLetterISORegionName.ToLower(currentCulture);
+            string region = currentRegion.TwoLetterISORegionName.ToUpperInvariant();
 
             if (locale == null)
                 locale = currentCulture.Name;
             else if (locale.Length > 2 && locale.Contains('-', StringComparison.Ordinal))
-                region = locale.Split('-')[1].ToLower(currentCulture);
+                region = locale.Split('-')[1].ToUpperInvariant();
 
             Uri request;
             if (apiver == ApiVersion.v4)
