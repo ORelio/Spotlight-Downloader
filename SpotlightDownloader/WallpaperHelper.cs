@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.Runtime.InteropServices;
 
 namespace SpotlightDownloader
@@ -24,7 +25,7 @@ namespace SpotlightDownloader
                 if (!System.IO.File.Exists(path))
                     return (false, $"File not found: {path}");
 
-                int result = SystemParametersInfo(SPI_SETDESKWALLPAPER, 0, path,
+                int result = SystemParametersInfo(SPI_SETDESKWALLPAPER, 0, Path.GetFullPath(path),
                     SPIF_UPDATEINIFILE | SPIF_SENDWININICHANGE);
 
                 if (result == 0)

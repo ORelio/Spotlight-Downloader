@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Security;
@@ -9,11 +10,14 @@ using Microsoft.Win32;
 
 using Windows.Storage;
 using Windows.System.UserProfile;
+using System.Collections.Generic;
 
 namespace SpotlightDownloader
 {
     static class LockScreenHelper
     {
+        private const string DefaultLockscreenFolder = @"C:\Windows\Web\Screen";
+
         /// <summary>
         /// Replace the user lockscreen image for Windows 10 and later though Personalization API.
         /// </summary>
@@ -41,12 +45,33 @@ namespace SpotlightDownloader
 
             if (imagePath == null)
             {
-                var file = await StorageFile.GetFileFromPathAsync(LockScreen.OriginalImageFile.LocalPath);
-                await LockScreen.SetImageFileAsync(file);
+                if (Directory.Exists(DefaultLockscreenFolder))
+                {
+                    // Look for valid image in system folder (usually named img100.jpg)
+                    var defaultLockScreenCandidates = new List<string>();
+                    defaultLockScreenCandidates.AddRange(Directory.GetFiles(DefaultLockscreenFolder, "*.jpg"));
+                    defaultLockScreenCandidates.AddRange(Directory.GetFiles(DefaultLockscreenFolder, "*.png"));
+                    var defaultLockscreen = defaultLockScreenCandidates.FirstOrDefault();
+
+                    if (defaultLockscreen != null)
+                    {
+                        Console.WriteLine(defaultLockscreen);
+                        var file = await StorageFile.GetFileFromPathAsync(defaultLockscreen);
+                        await LockScreen.SetImageFileAsync(file);
+                    }
+                    else
+                    {
+                        throw new FileNotFoundException(Path.Combine(DefaultLockscreenFolder, "img100.jpg"));
+                    }
+                }
+                else
+                {
+                    throw new DirectoryNotFoundException(DefaultLockscreenFolder);
+                }
             }
             else if (File.Exists(imagePath))
             {
-                var file = await StorageFile.GetFileFromPathAsync(imagePath);
+                var file = await StorageFile.GetFileFromPathAsync(Path.GetFullPath(imagePath));
                 await LockScreen.SetImageFileAsync(file);
             }
             else
@@ -85,7 +110,7 @@ namespace SpotlightDownloader
             }
             else if (File.Exists(imagePath))
             {
-                keyDefaultLockscreen.SetValue(ValueDefaultLockcreen, imagePath);
+                keyDefaultLockscreen.SetValue(ValueDefaultLockcreen, Path.GetFullPath(imagePath));
             }
             else
             {
@@ -165,6 +190,8 @@ namespace SpotlightDownloader
                 throw new FileNotFoundException(imagePath);
             }
 
+            var success = true;
+
             try
             {
                 await SetUserImage(imagePath).ConfigureAwait(false);
@@ -177,32 +204,31 @@ namespace SpotlightDownloader
             catch (Exception e)
             {
                 await Console.Error.WriteLineAsync("Failed to set user lockscreen: " + e.Message).ConfigureAwait(false);
-                return false;
                 throw;
-            }
-
-            try
-            {
-                await SetSpotlightEnabled(false).ConfigureAwait(false);
-
-#pragma warning disable CA1303
-                // no plans for localization yet so temporary disable CA1303
-                Console.WriteLine("User policy set to disable built-in spotlight features (Enterprise, Education only).");
-#pragma warning restore CA1303
-            }
-            catch (Exception e)
-            {
-                if (e is UnauthorizedAccessException || e is SecurityException || e is IOException)
-                {
-                    await Console.Error.WriteLineAsync("Failed to set user policy (Enterprise, Education only): " + e.Message).ConfigureAwait(false);
-                    return false;
-                }
-                else
-                    throw;
             }
 
             if (IsAdmin())
             {
+                try
+                {
+                    await SetSpotlightEnabled(false).ConfigureAwait(false);
+
+    #pragma warning disable CA1303
+                    // no plans for localization yet so temporary disable CA1303
+                    Console.WriteLine("User policy set to disable built-in spotlight features (Enterprise, Education only).");
+    #pragma warning restore CA1303
+                }
+                catch (Exception e)
+                {
+                    if (e is UnauthorizedAccessException || e is SecurityException || e is IOException)
+                    {
+                        await Console.Error.WriteLineAsync("Failed to set user policy (Enterprise, Education only): " + e.Message).ConfigureAwait(false);
+                        success = false;
+                    }
+                    else
+                        throw;
+                }
+
                 try
                 {
                     await SetSystemImage(imagePath).ConfigureAwait(false);
@@ -217,7 +243,7 @@ namespace SpotlightDownloader
                     if (e is UnauthorizedAccessException || e is SecurityException || e is IOException)
                     {
                         await Console.Error.WriteLineAsync("Failed to set system lockscreen (Enterprise, Education only): " + e.Message).ConfigureAwait(false);
-                        return false;
+                        success = false;
                     }
                     else
                         throw;
@@ -227,11 +253,11 @@ namespace SpotlightDownloader
             {
 #pragma warning disable CA1303
                 // no plans for localization yet so temporary disable CA1303
-                Console.WriteLine("Not launched as admin: Not touching system lockscreen (Enterprise, Education only).");
+                Console.WriteLine("Not launched as admin: Not touching system lockscreen and policy (Enterprise, Education only).");
 #pragma warning restore CA1303
             }
 
-            return true;
+            return success;
         }
 
         /// <summary>
@@ -253,6 +279,8 @@ namespace SpotlightDownloader
                 return false;
             }
 
+            var success = true;
+
             try
             {
                 await SetUserImage(null).ConfigureAwait(false);
@@ -264,33 +292,40 @@ namespace SpotlightDownloader
             }
             catch (Exception e)
             {
-                await Console.Error.WriteLineAsync("Failed to reset user lockscreen: " + e.Message).ConfigureAwait(false);
-                return false;
-                throw;
-            }
-
-            try
-            {
-                await SetSpotlightEnabled(true).ConfigureAwait(false);
-
-#pragma warning disable CA1303
-                // no plans for localization yet so temporary disable CA1303
-                Console.WriteLine("User policy reset to allow built-in spotlight features (Enterprise, Education only).");
-#pragma warning restore CA1303
-            }
-            catch (Exception e)
-            {
-                if (e is UnauthorizedAccessException || e is SecurityException || e is IOException)
+                if (e is FileNotFoundException)
                 {
-                    await Console.Error.WriteLineAsync("Failed to reset user policy (Enterprise, Education only): " + e.Message).ConfigureAwait(false);
-                    return false;
+                    await Console.Error.WriteLineAsync("Failed to reset user lockscreen: Could not find default lock screen image").ConfigureAwait(false);
+                    success = false;
                 }
                 else
+                {
+                    await Console.Error.WriteLineAsync("Failed to reset user lockscreen: " + e.Message).ConfigureAwait(false);
                     throw;
+                }
             }
 
             if (IsAdmin())
             {
+                try
+                {
+                    await SetSpotlightEnabled(true).ConfigureAwait(false);
+
+    #pragma warning disable CA1303
+                    // no plans for localization yet so temporary disable CA1303
+                    Console.WriteLine("User policy reset to allow built-in spotlight features (Enterprise, Education only).");
+    #pragma warning restore CA1303
+                }
+                catch (Exception e)
+                {
+                    if (e is UnauthorizedAccessException || e is SecurityException || e is IOException)
+                    {
+                        await Console.Error.WriteLineAsync("Failed to reset user policy (Enterprise, Education only): " + e.Message).ConfigureAwait(false);
+                        success = false;
+                    }
+                    else
+                        throw;
+                }
+
                 try
                 {
                     await SetSystemImage(null).ConfigureAwait(false);
@@ -305,7 +340,7 @@ namespace SpotlightDownloader
                     if (e is UnauthorizedAccessException || e is SecurityException || e is IOException)
                     {
                         await Console.Error.WriteLineAsync("Failed to reset system lockscreen (Enterprise, Education only): " + e.Message).ConfigureAwait(false);
-                        return false;
+                        success = false;
                     }
                     else
                         throw;
@@ -315,11 +350,11 @@ namespace SpotlightDownloader
             {
 #pragma warning disable CA1303
                 // no plans for localization yet so temporary disable CA1303
-                Console.WriteLine("Not launched as admin: Not touching system lockscreen (Enterprise, Education only).");
+                Console.WriteLine("Not launched as admin: Not touching system lockscreen and policy (Enterprise, Education only).");
 #pragma warning restore CA1303
             }
 
-            return true;
+            return success;
         }
     }
 }

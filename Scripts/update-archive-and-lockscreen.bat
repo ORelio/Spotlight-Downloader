@@ -15,5 +15,5 @@ if not "%errorlevel%" == "0" (
 
 mkdir SpotlightArchive > nul 2>&1
 powershell -ExecutionPolicy Bypass -File check-metered.ps1 && ^
-SpotlightDownloader download --maxres --metadata --outdir SpotlightArchive
+SpotlightDownloader download --metadata --outdir SpotlightArchive
 SpotlightDownloader lockscreen --from-dir SpotlightArchive --embed-meta --outname lockscreen

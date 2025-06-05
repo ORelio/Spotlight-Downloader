@@ -141,23 +141,24 @@ namespace SpotlightDownloader
                         {
                             if (pArgs.SingleImage || pArgs.Action == "wallpaper" || pArgs.Action == "lockscreen")
                             {
-                                string imageFile = pArgs.FromFile ?? await randomImage.DownloadToFile(pArgs.OutputDir, pArgs.IntegrityCheck, pArgs.Metadata, pArgs.OutputName, pArgs.ApiTryCount).ConfigureAwait(false);
+                                string imageFile = null;
 
-                                if (!Path.IsPathRooted(imageFile))
+                                if (!pArgs.Restore)
                                 {
-                                    imageFile = Path.GetFullPath(imageFile);
+                                    imageFile = pArgs.FromFile ?? await randomImage.DownloadToFile(pArgs.OutputDir, pArgs.IntegrityCheck, pArgs.Metadata, pArgs.OutputName, pArgs.ApiTryCount).ConfigureAwait(false);
+
+                                    Console.WriteLine(imageFile);
+
+                                    if (pArgs.EmbedMetadata)
+                                    {
+                                        imageFile = SpotlightImage.EmbedMetadata(
+                                            imageFile,
+                                            pArgs.OutputDir,
+                                            pArgs.OutputName ?? Path.GetFileNameWithoutExtension(imageFile)
+                                        );
+                                    }
                                 }
 
-                                Console.WriteLine(imageFile);
-
-                                if (pArgs.EmbedMetadata)
-                                {
-                                    imageFile = SpotlightImage.EmbedMetadata(
-                                        imageFile,
-                                        Path.GetDirectoryName(imageFile),
-                                        pArgs.OutputName ?? Path.GetFileNameWithoutExtension(imageFile)
-                                    );
-                                }
                                 if (pArgs.Action == "wallpaper")
                                 {
                                     try
@@ -201,7 +202,7 @@ namespace SpotlightDownloader
                                 {
                                     try
                                     {
-                                        Console.WriteLine(image.DownloadToFile(pArgs.OutputDir, pArgs.IntegrityCheck, pArgs.Metadata, null, pArgs.ApiTryCount));
+                                        Console.WriteLine(await image.DownloadToFile(pArgs.OutputDir, pArgs.IntegrityCheck, pArgs.Metadata, null, pArgs.ApiTryCount).ConfigureAwait(false));
                                         downloadCount++;
                                         pArgs.DownloadAmount--;
                                         if (pArgs.DownloadAmount <= 0)
