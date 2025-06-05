@@ -51,14 +51,13 @@ namespace SpotlightDownloader
         /// <summary>
         /// Request new images from the Spotlight API and return raw JSON response
         /// </summary>
-        /// <param name="maxres">Force maximum image resolution. Otherwise, current image resolution is used</param>
         /// <param name="locale">Null = Auto detect from current system, or specify xx-XX value format such as en-US</param>
         /// <param name="apiver">Version of the Spotlight API</param>
         /// <returns>Raw JSON response</returns>
         /// <exception cref="System.Net.WebException">An exception is thrown if the request fails</exception>
         private static readonly HttpClient httpClient = new();
 
-        private static async Task<string> PerformApiRequestAsync(bool maxres, string locale = null, ApiVersion apiver = ApiVersion.v4)
+        private static async Task<string> PerformApiRequestAsync(string locale = null, ApiVersion apiver = ApiVersion.v4)
         {
             CultureInfo currentCulture = CultureInfo.CurrentCulture;
             RegionInfo currentRegion = new(currentCulture.Name);
@@ -84,18 +83,14 @@ namespace SpotlightDownloader
             }
             else
             {
-                int screenWidth = maxres ? 99999 : Screen.PrimaryScreen.Bounds.Width;
-                int screenHeight = maxres ? 99999 : Screen.PrimaryScreen.Bounds.Height;
-
                 // Windows 10 requests the API with older hostname "arc.msn.com" instead of "fd.api.iris.microsoft.com" but both work
-                // This API supports setting disphorzres and dispvertres to have image scaled server-side and save bandwidth
+                // This API supports `disphorzres` and `dispvertres` to have image scaled server-side and save bandwidth. However,
+                // since we are now just getting the images as-is, we don't need to set these parameters anymore.
                 // This API also returns fileSize and sha256 to allow verifying image integrity after downloading
                 request = new Uri(Format(
                     CultureInfo.InvariantCulture,
                     "https://arc.msn.com/v3/Delivery/Placement?pid=338387&fmt=json&ua=WindowsShellClient"
-                    + "%2F0&cdm=1&disphorzres={0}&dispvertres={1}&pl={2}&lc={3}&ctry={4}&time={5}",
-                    screenWidth,
-                    screenHeight,
+                    + "%2F0&cdm=1&pl={0}&lc={1}&ctry={2}&time={3}",
                     locale,
                     locale,
                     region,
@@ -112,7 +107,6 @@ namespace SpotlightDownloader
         /// <summary>
         /// Request new images from the Spotlight API and return image urls
         /// </summary>
-        /// <param name="maxres">Force maximum image resolution. Otherwise, current main monitor screen resolution is used</param>
         /// <param name="portrait">Null = Auto detect from current main monitor resolution, True = portrait, False = landscape.</param>
         /// <param name="locale">Null = Auto detect from current system, or specify xx-XX value format such as en-US</param>
         /// <param name="apiver">Version of the Spotlight API</param>
@@ -120,14 +114,14 @@ namespace SpotlightDownloader
         /// <returns>List of images</returns>
         /// <exception cref="System.Net.WebException">An exception is thrown if the request fails</exception>
         /// <exception cref="InvalidDataException">An exception is thrown if the JSON data is invalid</exception>
-        public static async Task<SpotlightImage[]> GetImageUrlsAsync(bool maxres = false, bool? portrait = null, string locale = null, int attempts = 1, ApiVersion apiver = ApiVersion.v4)
+        public static async Task<SpotlightImage[]> GetImageUrlsAsync(bool? portrait = null, string locale = null, int attempts = 1, ApiVersion apiver = ApiVersion.v4)
         {
             while (true)
             {
                 try
                 {
                     attempts--;
-                    return await GetImageUrlsSingleAttemptAsync(maxres, portrait, locale, apiver).ConfigureAwait(false);
+                    return await GetImageUrlsSingleAttemptAsync(portrait, locale, apiver).ConfigureAwait(false);
                 }
                 catch (Exception e)
                 {
@@ -144,17 +138,16 @@ namespace SpotlightDownloader
         /// <summary>
         /// Request new images from the Spotlight API and return image urls (Single Attempt)
         /// </summary>
-        /// <param name="maxres">Force maximum image resolution. Otherwise, current main monitor screen resolution is used</param>
         /// <param name="portrait">Null = Auto detect from current main monitor resolution, True = portrait, False = landscape.</param>
         /// <param name="locale">Null = Auto detect from current system, or specify xx-XX value format such as en-US</param>
         /// <param name="apiver">Version of the Spotlight API</param>
         /// <returns>List of images</returns>
         /// <exception cref="System.Net.WebException">An exception is thrown if the request fails</exception>
         /// <exception cref="InvalidDataException">An exception is thrown if the JSON data is invalid</exception>
-        private static async Task<SpotlightImage[]> GetImageUrlsSingleAttemptAsync(bool maxres = false, bool? portrait = null, string locale = null, ApiVersion apiver = ApiVersion.v4)
+        private static async Task<SpotlightImage[]> GetImageUrlsSingleAttemptAsync(bool? portrait = null, string locale = null, ApiVersion apiver = ApiVersion.v4)
         {
             List<SpotlightImage> images = [];
-            string rawJson = await PerformApiRequestAsync(maxres, locale, apiver).ConfigureAwait(false);
+            string rawJson = await PerformApiRequestAsync(locale, apiver).ConfigureAwait(false);
             var root = Json.ParseJson(rawJson);
             // Console.Error.WriteLine("=== RAW JSON RECEIVED FROM SERVER ==="); // debug purposes
             // Console.Error.WriteLine(rawJson); // debug purposes

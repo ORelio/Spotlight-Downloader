@@ -4,7 +4,6 @@ namespace SpotlightDownloader.Commands
     {
         public string Action { get; set; }
         public bool SingleImage { get; set; }
-        public bool MaximumRes { get; set; }
         public bool? Portrait { get; set; }
         public string Locale { get; set; }
         public bool AllLocales { get; set; }

@@ -60,7 +60,6 @@ namespace SpotlightDownloader
                         "  --api-tries <n>     Amount of unsuccessful API calls before giving up. Default is 3.",
                         "  --api-version <v>   Spotlight API version: 3 (Windows 10) or 4 (Windows 11). Default is 4",
                         "  --skip-integrity    Skip integrity check: file size and sha256 (API v3) or parse image (API v4)",
-                        "  --maxres            Force maximum image resolution (API v3). API v4 always returns max res.",
                         "  --metadata          Also save image metadata such as title & copyright as <image-name>.txt",
                         //"  --embed-meta        When available, embed metadata into wallpaper or lockscreen image",
                         "  --from-file         Set the specified file as wallpaper/lockscreen instead of downloading",
@@ -108,7 +107,7 @@ namespace SpotlightDownloader
                     {
                         SpotlightImage[] images = (parsed.FromFile != null && (parsed.Action == "wallpaper" || parsed.Action == "lockscreen"))
                             ? [new SpotlightImage()]
-                            : await Spotlight.GetImageUrlsAsync(parsed.MaximumRes, parsed.Portrait, parsed.Locale, parsed.ApiTryCount, parsed.ApiVersion).ConfigureAwait(false);
+                            : await Spotlight.GetImageUrlsAsync(parsed.Portrait, parsed.Locale, parsed.ApiTryCount, parsed.ApiVersion).ConfigureAwait(false);
 
                         if (images.Length < 1)
                         {

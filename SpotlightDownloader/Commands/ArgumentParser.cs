@@ -52,9 +52,6 @@ namespace SpotlightDownloader.Commands
                                 throw new ArgumentException("Cache size must be a valid and strictly positive number.");
                             parsed.CacheSize = cacheSize;
                             break;
-                        case "--maxres":
-                            parsed.MaximumRes = true;
-                            break;
                         case "--portrait":
                             parsed.Portrait = true;
                             break;
