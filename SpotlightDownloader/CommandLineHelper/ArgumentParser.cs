@@ -4,7 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 
-namespace SpotlightDownloader.Commands
+namespace SpotlightDownloader.CommandLineHelper
 {
     internal static partial class ArgumentParser
     {

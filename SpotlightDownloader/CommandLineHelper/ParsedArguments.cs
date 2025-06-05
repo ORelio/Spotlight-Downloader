@@ -1,4 +1,4 @@
-namespace SpotlightDownloader.Commands
+namespace SpotlightDownloader.CommandLineHelper
 {
     internal sealed class ParsedArguments
     {

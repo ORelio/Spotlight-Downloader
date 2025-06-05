@@ -1,11 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 
-using SpotlightDownloader.Commands;
+using SpotlightDownloader.CommandLineHelper;
 
 namespace SpotlightDownloader
 {
@@ -19,10 +18,10 @@ namespace SpotlightDownloader
 
         static async Task Main(string[] args)
         {
-            ParsedArguments parsed = null;
+            ParsedArguments cmd = null;
             try
             {
-                parsed = ArgumentParser.Parse(args);
+                cmd = ArgumentParser.Parse(args);
             }
             catch (ArgumentException ex)
             {
@@ -90,12 +89,12 @@ namespace SpotlightDownloader
             {
                 Queue<string> remainingLocales = new();
 
-                if (parsed.AllLocales)
+                if (cmd.AllLocales)
                 {
                     remainingLocales = new Queue<string>(Locales.AllKnownSpotlightLocales);
                     await Console.Error.WriteLineAsync($"Starting download using {remainingLocales.Count} locales").ConfigureAwait(false);
-                    parsed.Locale = remainingLocales.Dequeue();
-                    await Console.Error.WriteLineAsync($"Switching to {parsed.Locale} - {remainingLocales.Count + 1} locales remaining").ConfigureAwait(false);
+                    cmd.Locale = remainingLocales.Dequeue();
+                    await Console.Error.WriteLineAsync($"Switching to {cmd.Locale} - {remainingLocales.Count + 1} locales remaining").ConfigureAwait(false);
                 }
 
                 int downloadCount = 0;
@@ -105,9 +104,9 @@ namespace SpotlightDownloader
                 {
                     try
                     {
-                        SpotlightImage[] images = (parsed.FromFile != null && (parsed.Action == "wallpaper" || parsed.Action == "lockscreen"))
+                        SpotlightImage[] images = (cmd.FromFile != null && (cmd.Action == "wallpaper" || cmd.Action == "lockscreen"))
                             ? [new SpotlightImage()]
-                            : await Spotlight.GetImageUrlsAsync(parsed.Portrait, parsed.Locale, parsed.ApiTryCount, parsed.ApiVersion).ConfigureAwait(false);
+                            : await Spotlight.GetImageUrlsAsync(cmd.Portrait, cmd.Locale, cmd.ApiTryCount, cmd.ApiVersion).ConfigureAwait(false);
 
                         if (images.Length < 1)
                         {
@@ -121,9 +120,9 @@ namespace SpotlightDownloader
                         SpotlightImage randomImage = images[rng.Next(images.Length)];
 #pragma warning restore CA5394
 
-                        if (parsed.Action == "urls")
+                        if (cmd.Action == "urls")
                         {
-                            if (parsed.SingleImage)
+                            if (cmd.SingleImage)
                             {
                                 Console.WriteLine(randomImage.Uri);
                             }
@@ -139,9 +138,9 @@ namespace SpotlightDownloader
 
                         try
                         {
-                            if (parsed.SingleImage || parsed.Action == "wallpaper" || parsed.Action == "lockscreen")
+                            if (cmd.SingleImage || cmd.Action == "wallpaper" || cmd.Action == "lockscreen")
                             {
-                                string imageFile = parsed.FromFile ?? await randomImage.DownloadToFile(parsed.OutputDir, parsed.IntegrityCheck, parsed.Metadata, parsed.OutputName, parsed.ApiTryCount).ConfigureAwait(false);
+                                string imageFile = cmd.FromFile ?? await randomImage.DownloadToFile(cmd.OutputDir, cmd.IntegrityCheck, cmd.Metadata, cmd.OutputName, cmd.ApiTryCount).ConfigureAwait(false);
 
                                 if (!Path.IsPathRooted(imageFile))
                                 {
@@ -150,15 +149,15 @@ namespace SpotlightDownloader
 
                                 Console.WriteLine(imageFile);
 
-                                if (parsed.EmbedMetadata)
+                                if (cmd.EmbedMetadata)
                                 {
                                     imageFile = SpotlightImage.EmbedMetadata(
                                         imageFile,
                                         Path.GetDirectoryName(imageFile),
-                                        parsed.OutputName ?? Path.GetFileNameWithoutExtension(imageFile)
+                                        cmd.OutputName ?? Path.GetFileNameWithoutExtension(imageFile)
                                     );
                                 }
-                                if (parsed.Action == "wallpaper")
+                                if (cmd.Action == "wallpaper")
                                 {
                                     try
                                     {
@@ -175,7 +174,7 @@ namespace SpotlightDownloader
                                         throw;
                                     }
                                 }
-                                else if (parsed.Action == "lockscreen")
+                                else if (cmd.Action == "lockscreen")
                                 {
                                     try
                                     {
@@ -199,15 +198,15 @@ namespace SpotlightDownloader
 
                             foreach (SpotlightImage image in images)
                             {
-                                string imagePath = image.GetFilePath(parsed.OutputDir);
+                                string imagePath = image.GetFilePath(cmd.OutputDir);
                                 if (!File.Exists(imagePath))
                                 {
                                     try
                                     {
-                                        Console.WriteLine(image.DownloadToFile(parsed.OutputDir, parsed.IntegrityCheck, parsed.Metadata, null, parsed.ApiTryCount));
+                                        Console.WriteLine(image.DownloadToFile(cmd.OutputDir, cmd.IntegrityCheck, cmd.Metadata, null, cmd.ApiTryCount));
                                         downloadCount++;
-                                        parsed.DownloadAmount--;
-                                        if (parsed.DownloadAmount <= 0)
+                                        cmd.DownloadAmount--;
+                                        if (cmd.DownloadAmount <= 0)
                                             break;
                                     }
                                     catch (InvalidDataException)
@@ -217,7 +216,7 @@ namespace SpotlightDownloader
                                 }
                             }
 
-                            if (parsed.Verbose)
+                            if (cmd.Verbose)
                             {
                                 await Console.Error.WriteLineAsync($"Successfully downloaded: {downloadCount} images.").ConfigureAwait(false);
                                 await Console.Error.WriteLineAsync($"Already downloaded: {images.Length - downloadCount} images.").ConfigureAwait(false);
@@ -236,7 +235,7 @@ namespace SpotlightDownloader
                     }
                     catch (Exception)
                     {
-                        if (parsed.AllLocales && remainingLocales.Count > 0)
+                        if (cmd.AllLocales && remainingLocales.Count > 0)
                         {
                             // Force switch to next locale
                             noNewImgCount = int.MaxValue;
@@ -244,22 +243,22 @@ namespace SpotlightDownloader
                         else throw;
                     }
 
-                    if (parsed.AllLocales && noNewImgCount >= 50 && remainingLocales.Count > 0)
+                    if (cmd.AllLocales && noNewImgCount >= 50 && remainingLocales.Count > 0)
                     {
                         noNewImgCount = 0;
-                        parsed.Locale = remainingLocales.Dequeue();
-                        await Console.Error.WriteLineAsync($"Switching to {parsed.Locale} - {remainingLocales.Count + 1} locales remaining").ConfigureAwait(false);
+                        cmd.Locale = remainingLocales.Dequeue();
+                        await Console.Error.WriteLineAsync($"Switching to {cmd.Locale} - {remainingLocales.Count + 1} locales remaining").ConfigureAwait(false);
                     }
 
-                } while (parsed.DownloadMany && (downloadCount > 0 || noNewImgCount < 50) && parsed.DownloadAmount > 0);
+                } while (cmd.DownloadMany && (downloadCount > 0 || noNewImgCount < 50) && cmd.DownloadAmount > 0);
 
-                if (parsed.CacheSize < int.MaxValue && parsed.CacheSize > 0)
+                if (cmd.CacheSize < int.MaxValue && cmd.CacheSize > 0)
                 {
                     foreach (FileInfo imgToDelete in
-                        Directory.GetFiles(parsed.OutputDir, "*.jpg", SearchOption.TopDirectoryOnly)
+                        Directory.GetFiles(cmd.OutputDir, "*.jpg", SearchOption.TopDirectoryOnly)
                         .Select(filePath => new FileInfo(filePath))
                         .OrderByDescending(fileInfo => fileInfo.CreationTime)
-                        .Skip(parsed.CacheSize))
+                        .Skip(cmd.CacheSize))
                     {
                         string metadataFile = SpotlightImage.GetMetaLocation(imgToDelete.FullName);
                         if (File.Exists(metadataFile))
