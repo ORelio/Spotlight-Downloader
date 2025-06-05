@@ -1,13 +1,15 @@
 ﻿using System;
-using System.Net;
-using System.Linq;
-using System.Globalization;
-using System.Windows.Forms;
-using SharpTools;
-using System.IO;
 using System.Collections.Generic;
+using System.Globalization;
+using System.IO;
+using System.Linq;
+using System.Net.Http;
 using System.Text;
-using System.Threading;
+using System.Text.Json;
+using System.Threading.Tasks;
+using System.Windows.Forms;
+
+using static System.String;
 
 namespace SpotlightDownloader
 {
@@ -19,7 +21,7 @@ namespace SpotlightDownloader
         /// <summary>
         /// Refers to different versions of the Spotlight API
         /// </summary>
-        public enum ApiVersion
+        internal enum ApiVersion
         {
             /// <summary>
             /// API version used by Windows 10 for its Lockscreen.
@@ -49,86 +51,84 @@ namespace SpotlightDownloader
         /// <summary>
         /// Request new images from the Spotlight API and return raw JSON response
         /// </summary>
-        /// <param name="maxres">Force maximum image resolution. Otherwise, current image resolution is used</param>
         /// <param name="locale">Null = Auto detect from current system, or specify xx-XX value format such as en-US</param>
         /// <param name="apiver">Version of the Spotlight API</param>
         /// <returns>Raw JSON response</returns>
         /// <exception cref="System.Net.WebException">An exception is thrown if the request fails</exception>
-        private static string PerformApiRequest(bool maxres, string locale = null, ApiVersion apiver = ApiVersion.v4)
+        private static readonly HttpClient httpClient = new();
+
+        private static async Task<string> PerformApiRequestAsync(string locale = null, ApiVersion apiver = ApiVersion.v4)
         {
-            WebClient webClient = new WebClient();
             CultureInfo currentCulture = CultureInfo.CurrentCulture;
-            RegionInfo currentRegion = new RegionInfo(currentCulture.Name);
-            string region = currentRegion.TwoLetterISORegionName.ToLower();
+            RegionInfo currentRegion = new(currentCulture.Name);
+            string region = currentRegion.TwoLetterISORegionName.ToUpperInvariant();
 
             if (locale == null)
                 locale = currentCulture.Name;
-            else if (locale.Length > 2 && locale.Contains("-"))
-                region = locale.Split('-')[1].ToLower();
+            else if (locale.Length > 2 && locale.Contains('-', StringComparison.Ordinal))
+                region = locale.Split('-')[1].ToUpperInvariant();
 
-            string request = null;
-
+            Uri request;
             if (apiver == ApiVersion.v4)
             {
                 // Windows 11 requests the API with "fd.api.iris.microsoft.com" hostname instead of "arc.msn.com" but both work
                 // Note: disphorzres and dispvertres parameters are ignored by this API version, need to scale images client-side
-                // Note: no fileSize or sha256 in this API versio so cannot easily check image integrity after download
-                request = String.Format(
+                // Note: no fileSize or sha256 in this API version so we cannot easily check image integrity after downloading
+                request = new Uri(Format(
+                    CultureInfo.InvariantCulture,
                     "https://fd.api.iris.microsoft.com/v4/api/selection?&placement=88000820&bcnt=4&country={0}&locale={1}&fmt=json",
                     region,
                     locale
-                );
+                ));
             }
             else
             {
-                int screenWidth = maxres ? 99999 : Screen.PrimaryScreen.Bounds.Width;
-                int screenHeight = maxres ? 99999 : Screen.PrimaryScreen.Bounds.Height;
-
                 // Windows 10 requests the API with older hostname "arc.msn.com" instead of "fd.api.iris.microsoft.com" but both work
-                // This API supports setting disphorzres and dispvertres to have image scaled server-side and save bandwidth
-                // This API also returns fileSize and sha256 to allow verifying image integrity after download
-                request = String.Format(
+                // This API supports `disphorzres` and `dispvertres` to have image scaled server-side and save bandwidth. However,
+                // since we are now just getting the images as-is, we don't need to set these parameters anymore.
+                // This API also returns fileSize and sha256 to allow verifying image integrity after downloading
+                request = new Uri(Format(
+                    CultureInfo.InvariantCulture,
                     "https://arc.msn.com/v3/Delivery/Placement?pid=338387&fmt=json&ua=WindowsShellClient"
-                        + "%2F0&cdm=1&disphorzres={0}&dispvertres={1}&pl={2}&lc={3}&ctry={4}&time={5}",
-                        screenWidth,
-                        screenHeight,
+                    + "%2F0&cdm=1&pl={0}&lc={1}&ctry={2}&time={3}",
                     locale,
                     locale,
                     region,
-                    DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ssZ")
-                );
+                    DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ssZ", CultureInfo.InvariantCulture)
+                ));
             }
 
-            byte[] stringRaw = webClient.DownloadData(request);
+            var response = await httpClient.GetAsync(request).ConfigureAwait(false);
+            response.EnsureSuccessStatusCode();
+            byte[] stringRaw = await response.Content.ReadAsByteArrayAsync().ConfigureAwait(false);
             return Encoding.UTF8.GetString(stringRaw);
         }
 
         /// <summary>
         /// Request new images from the Spotlight API and return image urls
         /// </summary>
-        /// <param name="maxres">Force maximum image resolution. Otherwise, current main monitor screen resolution is used</param>
         /// <param name="portrait">Null = Auto detect from current main monitor resolution, True = portrait, False = landscape.</param>
         /// <param name="locale">Null = Auto detect from current system, or specify xx-XX value format such as en-US</param>
         /// <param name="apiver">Version of the Spotlight API</param>
         /// <param name="attempts">Amount of API call attempts before raising an exception if an error occurs</param>
         /// <returns>List of images</returns>
         /// <exception cref="System.Net.WebException">An exception is thrown if the request fails</exception>
-        /// <exception cref="System.IO.InvalidDataException">An exception is thrown if the JSON data is invalid</exception>
-        public static SpotlightImage[] GetImageUrls(bool maxres = false, bool? portrait = null, string locale = null, int attempts = 1, ApiVersion apiver = ApiVersion.v4)
+        /// <exception cref="InvalidDataException">An exception is thrown if the JSON data is invalid</exception>
+        public static async Task<SpotlightImage[]> GetImageUrlsAsync(bool? portrait = null, string locale = null, int attempts = 1, ApiVersion apiver = ApiVersion.v4)
         {
             while (true)
             {
                 try
                 {
                     attempts--;
-                    return GetImageUrlsSingleAttempt(maxres, portrait, locale, apiver);
+                    return await GetImageUrlsSingleAttemptAsync(portrait, locale, apiver).ConfigureAwait(false);
                 }
                 catch (Exception e)
                 {
                     if (attempts > 0)
                     {
-                        Console.Error.WriteLine("SpotlightAPI: " + e.GetType() + ": " + e.Message + " - Waiting 10 seconds before retrying...");
-                        Thread.Sleep(TimeSpan.FromSeconds(10));
+                        await Console.Error.WriteLineAsync($"SpotlightAPI: {e.GetType()}: {e.Message} - Waiting 10 seconds before retrying...").ConfigureAwait(false);
+                        await Task.Delay(TimeSpan.FromSeconds(10)).ConfigureAwait(false);
                     }
                     else throw;
                 }
@@ -138,139 +138,115 @@ namespace SpotlightDownloader
         /// <summary>
         /// Request new images from the Spotlight API and return image urls (Single Attempt)
         /// </summary>
-        /// <param name="maxres">Force maximum image resolution. Otherwise, current main monitor screen resolution is used</param>
         /// <param name="portrait">Null = Auto detect from current main monitor resolution, True = portrait, False = landscape.</param>
         /// <param name="locale">Null = Auto detect from current system, or specify xx-XX value format such as en-US</param>
         /// <param name="apiver">Version of the Spotlight API</param>
         /// <returns>List of images</returns>
         /// <exception cref="System.Net.WebException">An exception is thrown if the request fails</exception>
-        /// <exception cref="System.IO.InvalidDataException">An exception is thrown if the JSON data is invalid</exception>
-        private static SpotlightImage[] GetImageUrlsSingleAttempt(bool maxres = false, bool? portrait = null, string locale = null, ApiVersion apiver = ApiVersion.v4)
+        /// <exception cref="InvalidDataException">An exception is thrown if the JSON data is invalid</exception>
+        private static async Task<SpotlightImage[]> GetImageUrlsSingleAttemptAsync(bool? portrait = null, string locale = null, ApiVersion apiver = ApiVersion.v4)
         {
-            List<SpotlightImage> images = new List<SpotlightImage>();
-            Json.JSONData imageData = Json.ParseJson(PerformApiRequest(maxres, locale, apiver));
+            List<SpotlightImage> images = [];
+            string rawJson = await PerformApiRequestAsync(locale, apiver).ConfigureAwait(false);
+            var root = Json.ParseJson(rawJson);
+            // Console.Error.WriteLine("=== RAW JSON RECEIVED FROM SERVER ==="); // debug purposes
+            // Console.Error.WriteLine(rawJson); // debug purposes
+            // Console.Error.WriteLine("=== END OF RAW JSON ==="); // debug purposes
 
-            if (portrait == null)
-                portrait = Screen.PrimaryScreen.Bounds.Height > Screen.PrimaryScreen.Bounds.Width;
+            portrait ??= Screen.PrimaryScreen.Bounds.Height > Screen.PrimaryScreen.Bounds.Width;
 
-            if (imageData.Type == Json.JSONData.DataType.Object && imageData.Properties.ContainsKey("batchrsp"))
+            if (!root.TryGetProperty("batchrsp", out var batchrsp))
+                throw new InvalidDataException("SpotlightAPI: API did not return a 'batchrsp' JSON object.");
+
+            if (!batchrsp.TryGetProperty("items", out var items) || items.ValueKind != JsonValueKind.Array)
+                throw new InvalidDataException("SpotlightAPI: 'batchrsp/items' field in JSON API response is not an array.");
+
+            foreach (var itemWrapper in items.EnumerateArray())
             {
-                imageData = imageData.Properties["batchrsp"];
-                if (imageData.Type == Json.JSONData.DataType.Object && imageData.Properties.ContainsKey("items"))
+                if (!itemWrapper.TryGetProperty("item", out var itemStringElement) || itemStringElement.ValueKind != JsonValueKind.String)
                 {
-                    if (!imageData.Properties.ContainsKey("ver") || imageData.Properties["ver"].StringValue != "1.0")
-                        Console.Error.WriteLine("SpotlightAPI: Unknown or missing API response version. Errors may occur.");
-                    imageData = imageData.Properties["items"];
-                    if (imageData.Type == Json.JSONData.DataType.Array)
+                    await Console.Error.WriteLineAsync("SpotlightAPI: Ignoring non-object item while parsing 'batchrsp/items' field in JSON API response.").ConfigureAwait(false);
+                    continue;
+                }
+
+                // Parse the nested JSON string
+                var item = Json.ParseJson(itemStringElement.GetString());
+
+                // ApiVersion.v4
+                if (item.TryGetProperty("ad", out var ad))
+                {
+                    if (apiver == ApiVersion.v4)
                     {
-                        foreach (Json.JSONData element in imageData.DataArray)
+                        string title = ad.TryGetProperty("iconHoverText", out var hoverText) ? hoverText.GetString()?.Split('\r', '\n')[0] : null;
+                        if (IsNullOrEmpty(title) && ad.TryGetProperty("title", out var titleProp))
+                            title = titleProp.GetString();
+                        string copyright = ad.TryGetProperty("copyright", out var copyrightProp) ? copyrightProp.GetString() : null;
+                        string urlField = portrait.Value ? "portraitImage" : "landscapeImage";
+                        if (ad.TryGetProperty(urlField, out var imageObj) && imageObj.TryGetProperty("asset", out var assetProp))
                         {
-                            if (element.Type == Json.JSONData.DataType.Object && element.Properties.ContainsKey("item"))
+                            string item_url = assetProp.GetString();
+                            if (!IsNullOrEmpty(item_url) && item_url.StartsWith("https://", StringComparison.InvariantCultureIgnoreCase))
                             {
-                                Json.JSONData item = element.Properties["item"];
-                                if (item.Type == Json.JSONData.DataType.String)
-                                    item = Json.ParseJson(item.StringValue);
-                                if (item.Type == Json.JSONData.DataType.Object && item.Properties.ContainsKey("ad") && item.Properties["ad"].Type == Json.JSONData.DataType.Object)
+                                string item_name = item_url.Split('/').Last().Split('?')[0];
+                                images.Add(new SpotlightImage
                                 {
-                                    item = item.Properties["ad"];
-
-                                    if (apiver == ApiVersion.v4)
-                                    {
-                                        // The equivalent to "title_text" from APIv3 can be found in first line of" iconHoverText". APIv4 "title" does not describe the picture.
-                                        string title = item.Properties.ContainsKey("iconHoverText") ? item.Properties["iconHoverText"].StringValue.Split('\r')[0].Split('\n')[0] : null;
-                                        if (String.IsNullOrEmpty(title) && item.Properties.ContainsKey("title") && !String.IsNullOrEmpty(item.Properties["title"].StringValue))
-                                            title = item.Properties["title"].StringValue;
-                                        string copyright = item.Properties.ContainsKey("copyright") ? item.Properties["copyright"].StringValue : null;
-                                        string urlField = portrait.Value ? "portraitImage" : "landscapeImage";
-                                        if (item.Properties.ContainsKey(urlField)
-                                            && item.Properties[urlField].Properties.ContainsKey("asset")
-                                            && !String.IsNullOrEmpty(item.Properties[urlField].Properties["asset"].StringValue)
-                                            && item.Properties[urlField].Properties["asset"].StringValue.ToLowerInvariant().StartsWith("https://"))
-                                        {
-                                            string item_url = item.Properties[urlField].Properties["asset"].StringValue;
-                                            string item_name = item_url.Split('/').Last().Replace("?ver=", "").Replace('?', '_').Replace('=', '_');
-                                            images.Add(new SpotlightImage()
-                                            {
-                                                Uri = item_url,
-                                                Sha256 = null,
-                                                FileSize = null,
-                                                FileName = item_name,
-                                                Title = title,
-                                                Copyright = copyright
-                                            });
-                                        }
-                                        else Console.Error.WriteLine("SpotlightAPI: Ignoring item image with missing or invalid uri.");
-                                    }
-                                    else // ApiVersion.v3
-                                    {
-                                        string title;
-                                        Json.JSONData titleObj = item.Properties.ContainsKey("title_text") ? item.Properties["title_text"] : null;
-                                        if (titleObj != null && titleObj.Type == Json.JSONData.DataType.Object && titleObj.Properties.ContainsKey("tx"))
-                                            title = titleObj.Properties["tx"].StringValue;
-                                        else title = null;
-
-                                        string copyright;
-                                        Json.JSONData copyrightObj = item.Properties.ContainsKey("copyright_text") ? item.Properties["copyright_text"] : null;
-                                        if (copyrightObj != null && copyrightObj.Type == Json.JSONData.DataType.Object && copyrightObj.Properties.ContainsKey("tx"))
-                                            copyright = copyrightObj.Properties["tx"].StringValue;
-                                        else copyright = null;
-
-                                        string urlField = portrait.Value ? "image_fullscreen_001_portrait" : "image_fullscreen_001_landscape";
-                                        if (item.Properties.ContainsKey(urlField) && item.Properties[urlField].Type == Json.JSONData.DataType.Object)
-                                        {
-                                            item = item.Properties[urlField];
-                                            if (item.Properties.ContainsKey("u") && item.Properties.ContainsKey("sha256") && item.Properties.ContainsKey("fileSize")
-                                                && item.Properties["u"].Type == Json.JSONData.DataType.String
-                                                && item.Properties["sha256"].Type == Json.JSONData.DataType.String
-                                                && item.Properties["fileSize"].Type == Json.JSONData.DataType.String)
-                                            {
-                                                int fileSizeParsed = 0;
-                                                if (int.TryParse(item.Properties["fileSize"].StringValue, out fileSizeParsed))
-                                                {
-                                                    SpotlightImage image = new SpotlightImage()
-                                                    {
-                                                        Uri = item.Properties["u"].StringValue,
-                                                        Sha256 = item.Properties["sha256"].StringValue,
-                                                        FileSize = fileSizeParsed,
-                                                        FileName = null,
-                                                        Title = title,
-                                                        Copyright = copyright
-                                                    };
-                                                    try
-                                                    {
-                                                        System.Convert.FromBase64String(image.Sha256);
-                                                    }
-                                                    catch
-                                                    {
-                                                        image.Sha256 = null;
-                                                    }
-                                                    if (!String.IsNullOrEmpty(image.Uri)
-                                                        && !String.IsNullOrEmpty(image.Sha256)
-                                                        && image.FileSize > 0)
-                                                    {
-                                                        images.Add(image);
-                                                    }
-                                                    else Console.Error.WriteLine("SpotlightAPI: Ignoring image with empty uri, hash and/or file size less or equal to 0.");
-                                                }
-                                                else Console.Error.WriteLine("SpotlightAPI: Ignoring image with invalid, non-number file size.");
-                                            }
-                                            else Console.Error.WriteLine("SpotlightAPI: Ignoring item image uri with missing 'u', 'sha256' and/or 'fileSize' field(s).");
-                                        }
-                                        else Console.Error.WriteLine("SpotlightAPI: Ignoring item image with missing uri.");
-                                    }
-                                }
-                                else Console.Error.WriteLine("SpotlightAPI: Ignoring item with missing 'ad' object.");
+                                    Uri = item_url,
+                                    Sha256 = null,
+                                    FileSize = null,
+                                    FileName = item_name,
+                                    Title = title,
+                                    Copyright = copyright
+                                });
                             }
-                            else Console.Error.WriteLine("SpotlightAPI: Ignoring non-object item while parsing 'batchrsp/items' field in JSON API response.");
+                            else
+                            {
+                                await Console.Error.WriteLineAsync("SpotlightAPI: Ignoring item image with missing or invalid uri.").ConfigureAwait(false);
+                            }
                         }
                     }
-                    else throw new InvalidDataException("SpotlightAPI: 'batchrsp/items' field in JSON API response is not an array.");
+                    else // ApiVersion.v3
+                    {
+                        string title = ad.TryGetProperty("title_text", out var titleObj) && titleObj.TryGetProperty("tx", out var txTitle) ? txTitle.GetString() : null;
+                        string copyright = ad.TryGetProperty("copyright_text", out var copyrightObj) && copyrightObj.TryGetProperty("tx", out var txCopyright) ? txCopyright.GetString() : null;
+                        string urlField = portrait.Value ? "image_fullscreen_001_portrait" : "image_fullscreen_001_landscape";
+                        if (ad.TryGetProperty(urlField, out var imageObj) &&
+                            imageObj.TryGetProperty("u", out var uProp) &&
+                            imageObj.TryGetProperty("sha256", out var sha256Prop) &&
+                            imageObj.TryGetProperty("fileSize", out var fileSizeProp))
+                        {
+                            string uri = uProp.GetString();
+                            string sha256 = sha256Prop.GetString();
+                            _ = int.TryParse(fileSizeProp.GetString(), out int fileSizeParsed);
+                            if (!IsNullOrEmpty(uri) && !IsNullOrEmpty(sha256) && fileSizeParsed > 0)
+                            {
+                                images.Add(new SpotlightImage
+                                {
+                                    Uri = uri,
+                                    Sha256 = sha256,
+                                    FileSize = fileSizeParsed,
+                                    FileName = null,
+                                    Title = title,
+                                    Copyright = copyright
+                                });
+                            }
+                        }
+                        else
+                        {
+                            await Console.Error.WriteLineAsync("SpotlightAPI: Ignoring item image uri with missing 'u', 'sha256' and/or 'fileSize' field(s).").ConfigureAwait(false);
+                        }
+                    }
                 }
-                else throw new InvalidDataException("SpotlightAPI: Missing 'batchrsp/items' field in JSON API response." + (locale != null ? " Locale '" + locale + "' may be invalid." : ""));
             }
-            else throw new InvalidDataException("SpotlightAPI: API did not return a 'batchrsp' JSON object.");
 
-            return images.ToArray();
+            var uniqueImages = new List<SpotlightImage>();
+            var seenUrls = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            foreach (var img in images)
+            {
+                if (!IsNullOrEmpty(img.Uri) && seenUrls.Add(img.Uri))
+                    uniqueImages.Add(img);
+            }
+
+            return [.. uniqueImages];
         }
     }
 }
