@@ -18,6 +18,9 @@ namespace SpotlightDownloader
         {
             try
             {
+                if (!PlatformHelper.IsWindows())
+                    return (false, "Not supported on this platform");
+
                 if (!System.IO.File.Exists(path))
                     return (false, $"File not found: {path}");
 
