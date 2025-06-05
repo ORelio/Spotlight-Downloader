@@ -16,12 +16,12 @@ namespace SpotlightDownloader
     /// <summary>
     /// Wrapper around the Spotlight JSON API - By ORelio (c) 2018-2024 - CDDL 1.0
     /// </summary>
-    static class Spotlight
+    static class SpotlightApi
     {
         /// <summary>
         /// Refers to different versions of the Spotlight API
         /// </summary>
-        internal enum ApiVersion
+        internal enum Version
         {
             /// <summary>
             /// API version used by Windows 10 for its Lockscreen.
@@ -57,7 +57,7 @@ namespace SpotlightDownloader
         /// <exception cref="System.Net.WebException">An exception is thrown if the request fails</exception>
         private static readonly HttpClient httpClient = new();
 
-        private static async Task<string> PerformApiRequestAsync(string locale = null, ApiVersion apiver = ApiVersion.v4)
+        private static async Task<string> PerformApiRequestAsync(string locale = null, Version apiver = Version.v4)
         {
             CultureInfo currentCulture = CultureInfo.CurrentCulture;
             RegionInfo currentRegion = new(currentCulture.Name);
@@ -69,10 +69,9 @@ namespace SpotlightDownloader
                 region = locale.Split('-')[1].ToUpperInvariant();
 
             Uri request;
-            if (apiver == ApiVersion.v4)
+            if (apiver == Version.v4)
             {
                 // Windows 11 requests the API with "fd.api.iris.microsoft.com" hostname instead of "arc.msn.com" but both work
-                // Note: disphorzres and dispvertres parameters are ignored by this API version, need to scale images client-side
                 // Note: no fileSize or sha256 in this API version so we cannot easily check image integrity after downloading
                 request = new Uri(Format(
                     CultureInfo.InvariantCulture,
@@ -84,8 +83,6 @@ namespace SpotlightDownloader
             else
             {
                 // Windows 10 requests the API with older hostname "arc.msn.com" instead of "fd.api.iris.microsoft.com" but both work
-                // This API supports `disphorzres` and `dispvertres` to have image scaled server-side and save bandwidth. However,
-                // since we are now just getting the images as-is, we don't need to set these parameters anymore.
                 // This API also returns fileSize and sha256 to allow verifying image integrity after downloading
                 request = new Uri(Format(
                     CultureInfo.InvariantCulture,
@@ -114,7 +111,7 @@ namespace SpotlightDownloader
         /// <returns>List of images</returns>
         /// <exception cref="System.Net.WebException">An exception is thrown if the request fails</exception>
         /// <exception cref="InvalidDataException">An exception is thrown if the JSON data is invalid</exception>
-        public static async Task<SpotlightImage[]> GetImageUrlsAsync(bool? portrait = null, string locale = null, int attempts = 1, ApiVersion apiver = ApiVersion.v4)
+        public static async Task<SpotlightImage[]> GetImageUrlsAsync(bool? portrait = null, string locale = null, int attempts = 1, Version apiver = Version.v4)
         {
             while (true)
             {
@@ -144,14 +141,11 @@ namespace SpotlightDownloader
         /// <returns>List of images</returns>
         /// <exception cref="System.Net.WebException">An exception is thrown if the request fails</exception>
         /// <exception cref="InvalidDataException">An exception is thrown if the JSON data is invalid</exception>
-        private static async Task<SpotlightImage[]> GetImageUrlsSingleAttemptAsync(bool? portrait = null, string locale = null, ApiVersion apiver = ApiVersion.v4)
+        private static async Task<SpotlightImage[]> GetImageUrlsSingleAttemptAsync(bool? portrait = null, string locale = null, Version apiver = Version.v4)
         {
             List<SpotlightImage> images = [];
             string rawJson = await PerformApiRequestAsync(locale, apiver).ConfigureAwait(false);
             var root = JsonDocument.Parse(rawJson).RootElement;
-            // Console.Error.WriteLine("=== RAW JSON RECEIVED FROM SERVER ==="); // debug purposes
-            // Console.Error.WriteLine(rawJson); // debug purposes
-            // Console.Error.WriteLine("=== END OF RAW JSON ==="); // debug purposes
 
             portrait ??= Screen.PrimaryScreen.Bounds.Height > Screen.PrimaryScreen.Bounds.Width;
 
@@ -175,7 +169,7 @@ namespace SpotlightDownloader
                 // ApiVersion.v4
                 if (item.TryGetProperty("ad", out var ad))
                 {
-                    if (apiver == ApiVersion.v4)
+                    if (apiver == Version.v4)
                     {
                         string title = ad.TryGetProperty("iconHoverText", out var hoverText) ? hoverText.GetString()?.Split('\r', '\n')[0] : null;
                         if (IsNullOrEmpty(title) && ad.TryGetProperty("title", out var titleProp))

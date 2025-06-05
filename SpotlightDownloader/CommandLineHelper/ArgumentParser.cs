@@ -104,7 +104,7 @@ namespace SpotlightDownloader.CommandLineHelper
                                 throw new ArgumentException("--api-version expects an additional argument.");
                             if (!int.TryParse(args[i], out int apiVerInt) || apiVerInt < 3 || apiVerInt > 4)
                                 throw new ArgumentException("Must set a supported API version: 3 or 4");
-                            parsed.ApiVersion = apiVerInt == 3 ? Spotlight.ApiVersion.v3 : Spotlight.ApiVersion.v4;
+                            parsed.ApiVersion = apiVerInt == 3 ? SpotlightApi.Version.v3 : SpotlightApi.Version.v4;
                             break;
                         case "--skip-integrity":
                             parsed.IntegrityCheck = false;

@@ -106,7 +106,7 @@ namespace SpotlightDownloader
                     {
                         SpotlightImage[] images = (cmd.FromFile != null && (cmd.Action == "wallpaper" || cmd.Action == "lockscreen"))
                             ? [new SpotlightImage()]
-                            : await Spotlight.GetImageUrlsAsync(cmd.Portrait, cmd.Locale, cmd.ApiTryCount, cmd.ApiVersion).ConfigureAwait(false);
+                            : await SpotlightApi.GetImageUrlsAsync(cmd.Portrait, cmd.Locale, cmd.ApiTryCount, cmd.ApiVersion).ConfigureAwait(false);
 
                         if (images.Length < 1)
                         {
