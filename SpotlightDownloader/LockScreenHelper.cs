@@ -15,15 +15,6 @@ namespace SpotlightDownloader
         /// <param name="path">Path to the new .jpg file for lockscreen</param>
         public static async Task<bool> SetLockScreen(string imagePath)
         {
-            if (!PlatformHelper.IsWindows())
-            {
-#pragma warning disable CA1303
-                // no plans for localization yet so temporary disable CA1303
-                await Console.Error.WriteLineAsync("Lockscreen change is not supported on this platform.").ConfigureAwait(false);
-#pragma warning restore CA1303
-                return false;
-            }
-
             if (!UserProfilePersonalizationSettings.IsSupported())
             {
 #pragma warning disable CA1303
