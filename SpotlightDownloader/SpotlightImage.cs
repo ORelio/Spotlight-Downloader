@@ -31,7 +31,7 @@ namespace SpotlightDownloader
         /// <returns>Metadata file location</returns>
         public static string GetMetaLocation(string imagePath)
         {
-            return Path.Combine(Path.GetDirectoryName(imagePath), Path.GetFileNameWithoutExtension($"{imagePath}.txt"));
+            return Path.Combine(Path.GetDirectoryName(imagePath), Path.GetFileNameWithoutExtension(imagePath) + ".txt");
         }
 
         /// <summary>

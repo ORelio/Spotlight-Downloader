@@ -149,6 +149,15 @@ namespace SpotlightDownloader
                                 }
 
                                 Console.WriteLine(imageFile);
+
+                                if (parsed.EmbedMetadata)
+                                {
+                                    imageFile = SpotlightImage.EmbedMetadata(
+                                        imageFile,
+                                        parsed.OutputDir,
+                                        parsed.OutputName
+                                    );
+                                }
                                 if (parsed.Action == "wallpaper")
                                 {
                                     try
