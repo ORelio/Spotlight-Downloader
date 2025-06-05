@@ -19,6 +19,7 @@ namespace SpotlightDownloader.CommandLineHelper
         public string FromFile { get; set; }
         public int ApiTryCount { get; set; } = 3;
         public SpotlightApi.Version ApiVersion { get; set; } = SpotlightApi.Version.v4;
+        public bool Restore { get; set; }
         public bool Verbose { get; set; }
     }
 }
