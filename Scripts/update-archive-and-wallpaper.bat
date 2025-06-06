@@ -8,5 +8,5 @@ cd "%~dp0"
 
 mkdir SpotlightArchive > nul 2>&1
 powershell -ExecutionPolicy Bypass -File check-metered.ps1 && ^
-SpotlightDownloader download --maxres --metadata --outdir SpotlightArchive
+SpotlightDownloader download --metadata --outdir SpotlightArchive
 SpotlightDownloader wallpaper --from-dir SpotlightArchive --embed-meta --outname wallpaper

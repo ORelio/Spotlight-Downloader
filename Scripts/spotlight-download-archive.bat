@@ -8,4 +8,4 @@ cd "%~dp0"
 :: discovered. It may miss a few images but you should get most of them.
 
 mkdir SpotlightArchive > nul 2>&1
-SpotlightDownloader download --many --maxres --metadata --outdir SpotlightArchive
+SpotlightDownloader download --many --metadata --outdir SpotlightArchive

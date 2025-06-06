@@ -1,7 +1,7 @@
-﻿========================================================
-==== SpotlightDL v1.5.0 - Par ORelio - Microzoom.fr ====
-==== https://github.com/ORelio/Spotlight-Downloader ====
-========================================================
+﻿================================================================
+==== SpotlightDL v2.0.0 - Par ORelio & Contributeurs GitHub ====
+======= https://github.com/ORelio/Spotlight-Downloader =========
+================================================================
 
 Merci d'avoir téléchargé SpotlightDL!
 
@@ -9,10 +9,9 @@ Ce programme permet de récupérer les images de "Windows à la une" directement
 SpotlightDL peut également définir des images en tant que fond d'écran ou sur l'écran de verouillage global.
 
 Ce programme est utile dans les cas suivants :
- - Télécharger toute la bibliothèque d'images en définition maximale, avec fichiers de métadonnées
- - Définir les images en tant que fond d'écran, non seulement sous Windows 11 mais aussi sur les versions précédentes
- - Définir les images sur l'écran de verouillage global sous Windows 7/8/10/11, sans les publicités sous Windows 10/11
- - Utiliser SpotlightDL dans vos propres scripts et programmes en appelant la fonction récupérant les URL des images
+ - Télécharger une grande partie de la bibliothèque d'images en définition maximale, avec fichiers de métadonnées
+ - Définir les images en tant qu'écran de verrouillage ou fond d'écran en retirant les publicités
+ - Utiliser SpotlightDL dans vos propres scripts et programmes en utilisant le mode URL
 
 =============
  Utilisation
@@ -34,9 +33,11 @@ update-archive-and-wallpaper
   Cela permet d'archiver les images au fur et à mesure sans envoyer beaucoup de requêtes API.
 
 update-archive-and-lockscreen
-  Même fonctionnement qu'update-archive-and-wallpaper mais change l'écran de verouillage global.
-  Ce script doit être lancé en tant qu'administrateur car il remplace une image dans le dossier Windows
-  et vide le cache de l'écran de verouillage afin d'en forcer la mise à jour immédiate.
+  Même fonctionnement qu'update-archive-and-wallpaper mais change l'écran de verouillage.
+
+update-archive-and-lockscreen-all-users
+  Même fonctionnement qu'update-archive-and-wallpaper mais change l'écran de verouillage global du système.
+  Nécessite les droits admin et définit une politique Intune, non gérée sur les éditions familiales.
 
 update-wallpaper
   Ce script maintient un cache de quelques images et en définit une au hasard en tant que fond d'écran.
@@ -44,13 +45,15 @@ update-wallpaper
   Les images sont téléchargées pour votre définition d'écran, et les plus anciennes sont supprimées du cache.
 
 update-lockscreen
-  Même fonctionnement qu'update-wallpaper mais définit l'image en tant qu'écran de verouillage global.
-  Ce script doit être lancé en tant qu'administrateur car il remplace une image dans le dossier Windows
-  et vide le cache de l'écran de verouillage afin d'en forcer la mise à jour immédiate.
+  Même fonctionnement qu'update-wallpaper mais définit l'image en tant qu'écran de verouillage.
+
+update-lockscreen-all-users
+  Même fonctionnement qu'update-wallpaper mais définit l'image en tant qu'écran de verouillage global du système.
+  Nécessite les droits admin et définit une politique Intune, non gérée sur les éditions familiales.
 
 restore-lockscreen
-  Ce script restaure l'écran de verrouillage par défaut.
-  Il requiert les droits administrateur.
+  Ce script restaure l'écran de verrouillage par défaut du système.
+  Cela déverrouille les réglages d'écran de verrouillage personnels bloqués par la politique Intune définie par certains scripts ci-dessus.
 
 generate-manual
   Ce script sauvegarde le mode d'emploi en ligne de commande dans un fichier texte,
@@ -112,17 +115,23 @@ Cliquez sur OK pour sauvegarder votre tâche.
  FAQ
 =====
 
-Q: L'écran de verrouillage n'apparaît pas lorsque j'ai ouvert ma session ?
-R: Assurez-vous que l'image est également sélectionnée dans vos paramètres personnels d'écran de verouillage.
-
 Q: Combien d'images sont téléchargées par défaut ? (càd sans les arguments --single ou --many)
 R: Par défaut, la liste d'images retournées par un seul appel API: actuellement 4.
 
 Q: Certaines images n'ont pas de titre ou de copyright dans leur métadonnées?
 R: Ces informations ne sont pas fournies pour toutes les images au niveau de l'API Windows à la une.
 
+Q: L'écran de verrouillage n'apparaît pas lorsque je n'ai PAS ouvert ma session ?
+R: Vous pourriez vouloir définir l'image pour tous les utilisateurs en utilisant le script adéquat.
+
+Q: Windows dit que mes réglages d'écran de verrouillage sont gérés par mon organisation !?
+R: Utilisez le script restore-lockscreen pour retirer la politique mise par update-lockscreen-all-users
+
 Q: Je ne veux pas du titre de l'image sur mon fond d'écran ou écran de verrouillage. Comment l'enlever ?
 R: Modifiez le fichier batch que vous utilisez pour enlever le paramètre --embed-meta dans la commande associée.
+
+Q: L'écran de verouillage apparait, mais je vois toujours des textes divers par-dessus ?
+R: Désactivez "Personnaliser l'écran de verrouillage, notamment avec des anecdotes et des astuces" dans vos réglages.
 
 Q: Je souhaite obtenir les métadonnées/images pour une langue spécifique. Comment faire ?
 R: Modifiez le fichier batch que vous utilisez pour ajouter le paramètre --locale fr-FR ou autre code de langue.
@@ -139,7 +148,7 @@ R: Non, dans ce cas les fichiers batch réutilisent les images déjà en cache, 
 Q: Comment activer le téléchargement d'images sur les connexions limitées ?
 R: Modifiez le fichier batch que vous utilisez pour supprimer entièrement la ligne contenant "check-metered.ps1"
 
-Q: Les images sont en 1080p même avec l'option --maxres, comment obtenir des images en 4K ?
+Q: Les images sont en 1080p, comment obtenir des images en 4K ?
 R: La définition 4K est disponible uniquement via l'API v4, prise en charge par SpotlightDL v1.5.0 ou supérieur
 
 ===============
@@ -152,6 +161,6 @@ Spotlight Downloader a été conçu en utilisant les ressources suivantes :
  - Etudes de l'API Spotlight par KoalaBR, Biswa96 et ORelio
  - Police Agency FB par Microsoft Corporation (Logo)
 
-+--------------------+
-| © 2018-2024 ORelio |
-+--------------------+
++-------------------------------------------+
+| © 2018-2025 ORelio & Contributeurs GitHub |
++-------------------------------------------+

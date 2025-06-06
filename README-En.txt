@@ -1,7 +1,7 @@
-﻿=======================================================
-==== SpotlightDL v1.5.0 - By ORelio - Microzoom.fr ====
-==== https://github.com/ORelio/Spotlight-Downloader ===
-=======================================================
+﻿==============================================================
+==== SpotlightDL v2.0.0 - By ORelio & GitHub contributors ====
+======= https://github.com/ORelio/Spotlight-Downloader =======
+==============================================================
 
 Thanks for dowloading SpotlightDL!
 
@@ -9,10 +9,9 @@ This program can retrieve Windows Spotlight images by requesting the Microsoft S
 SpotlightDL can also define images as wallpaper and system-wide lockscreen image.
 
 It is useful in the following use cases:
- - Download the whole Spotlight library with maximum image resolution and metadata
- - Define Spotlight images as wallpaper, not only on Windows 11 but also on previous versions
- - Define Spotlight images as global lock screen on Windows 7/8/10/11, without ads on Windows 10/11
- - Chain SpotlightDL with your own scripts and apps by taking advantage of the url mode
+ - Download most of the Spotlight library with maximum image resolution and metadata
+ - Define Spotlight images as ad-less lockscreen or wallpaper
+ - Chain SpotlightDL with your own scripts and apps using the url mode
 
 ============
  How to use
@@ -30,13 +29,15 @@ spotlight-download-archive
 
 update-archive-and-wallpaper
   This script calls once the Spotlight API and adds the result to the
-  Spotlight archive, then randomly defines a Spotlight image as wallpaper
+  Spotlight archive, then randomly defines a Spotlight image as wallpaper.
   This allows to gradually download images without hammering the Spotlight API.
 
 update-archive-and-lockscreen
-  Same as update-archive-and-wallpaper but updates the system-wide lockscreen.
-  This script must be run as administrator as it replaces an image in the
-  Windows folder and clear the lockscreen cache to force a lockscreen refresh.
+  Same as update-archive-and-wallpaper but updates the lockscreen image for the current user.
+
+update-archive-and-lockscreen-all-users
+  Same as update-archive-and-wallpaper but defines images as system-wide lockscreen.
+  Requires Admin privileges and relies on Intune policy, which is not supported on the Home edition.
 
 update-wallpaper
   This script maintains a cache of several Spotlight pictures tailored to your screen
@@ -44,13 +45,15 @@ update-wallpaper
   a few updates without Internet access, and oldest images are deleted from the cache.
 
 update-lockscreen
-  Same as update-wallpaper but defines images as system-wide lockscreen
-  This script must be run as administrator as it replaces an image in the
-  Windows folder and clear the lockscreen cache to force a lockscreen refresh.
+  Same as update-wallpaper but defines lockscreen image for the current user.
+
+update-lockscreen-all-users
+  Same as update-wallpaper but defines images as system-wide lockscreen.
+  Requires Admin privileges and relies on Intune policy, which is not supported on the Home edition.
 
 restore-lockscreen
-  This script restores the default lockscreen image.
-  This script must be run as administrator.
+  This script restores the default system-wide lockscreen image.
+  This will unlock user lockscreen settings locked by the Intune policy set by some other scripts above.
 
 generate-manual
   This script saves usage info as a text file for your convenience,
@@ -110,17 +113,23 @@ Click OK to save your task.
  FAQ
 =====
 
-Q: The lockscreen does not appear when I am logged on?
-R: Make sure the image is also selected in your personal lock screen settings.
-
 Q: How many images are downloaded when using default mode? (i.e. without using --single or --many)
 R: Default mode downloads a list of images returned by a single API call: currently 4.
 
 Q: Some images do not have a title or copyright in their metadata?
 R: Those fields are not provided for all images by the Spotlight API.
 
+Q: The lockscreen image does not appear when I am NOT logged on?
+R: You may want to define lockscreen image for all users using the appropriate script.
+
+Q: Windows says that my Lockscreen settings are managed by my organization!?
+R: Use the restore-lockscreen script to remove policy set by the update-lockscreen-all-users script
+
 Q: I do not want to have the image title inside my wallpaper or lockscreen. How to remove it?
 R: Edit the batch file you want to use and remove --embed-meta inside the corresponding command.
+
+Q: The lock screen appears, but I still see various texts on it?
+R: Disable "Get fun facts, tips, tricks, and more on your lock screen" in your Lockscreen settings
 
 Q: I would like to retrieve metadata/images for a specific language. How to do it?
 R: Edit the batch file you want to use and add --locale en-US or any other locale code
@@ -137,7 +146,7 @@ R: No. Batch files will reuse previously downloaded images, except spotlight-dow
 Q: How to enable image download on metered networks?
 R: Edit the batch file you want to use and remove the whole line containing "check-metered.ps1"
 
-Q: Images are 1080p even with --maxres option, how to get 4K images?
+Q: Images are 1080p, how to get 4K images?
 A: 4K resolution is only available via API v4, supported by SpotlightDL v1.5.0 or higher
 
 =========
@@ -150,6 +159,6 @@ The Spotlight Downloader program has been created using the following resources:
  - Spotlight API studies by KoalaBR, Biswa96 & ORelio
  - Agency FB font family by Microsoft Corporation (Logo)
 
-+--------------------+
-| © 2018-2024 ORelio |
-+--------------------+
++------------------------------------------+
+| © 2018-2025 ORelio & GitHub contributors |
++------------------------------------------+

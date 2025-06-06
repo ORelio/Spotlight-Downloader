@@ -1,519 +1,291 @@
 ﻿using System;
-using System.Linq;
-using System.IO;
-using SharpTools;
-using System.Diagnostics;
 using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Threading.Tasks;
+
+using SpotlightDownloader.CommandLineHelper;
 
 namespace SpotlightDownloader
 {
     /// <summary>
-    /// Download Microsoft Spotlight images - By ORelio (c) 2018-2024 - CDDL 1.0
+    /// Download Microsoft Spotlight images - By ORelio & Contributors (c) 2018-2025 - CDDL 1.0
     /// </summary>
-    class Program
+    sealed class Program
     {
         public const string Name = "SpotlightDL";
-        public const string Version = "1.5.0";
+        public const string Version = "2.0.0";
 
-        static void Main(string[] args)
+        static async Task Main(string[] args)
         {
-            //Configure System.Net to use TLS 1.2 - disabled by default for .NET 4.0 - Stackoverflow 33761919 - Issue #22
-            System.Net.ServicePointManager.SecurityProtocol = (System.Net.SecurityProtocolType)3072; //Tls12
-
-            if (args.Length > 0 && !args.Contains("--help"))
+            ParsedArguments pArgs = null;
+            try
             {
-                string action = null;
-                bool singleImage = false;
-                bool maximumRes = false;
-                bool? portrait = false;
-                string locale = null;
-                bool allLocales = false;
-                string outputDir = ".";
-                string outputName = "spotlight";
-                bool integrityCheck = true;
-                bool downloadMany = false;
-                int downloadAmount = int.MaxValue;
-                int cacheSize = int.MaxValue;
-                bool metadata = false;
-                bool metadataAllowInconsistent = false;
-                bool embedMetadata = false;
-                string fromFile = null;
-                int apiTryCount = 3;
-                Spotlight.ApiVersion apiVersion = Spotlight.ApiVersion.v4;
-                bool verbose = false;
-
-                switch (args[0].ToLower())
+                pArgs = ArgumentParser.Parse(args);
+            }
+            catch (ArgumentException ex)
+            {
+                if (ex.Message == "Show help")
                 {
-                    case "urls":
-                    case "download":
-                    case "wallpaper":
-                    case "lockscreen":
-                        action = args[0].ToLower();
-                        break;
-                    default:
-                        Console.Error.WriteLine("Unknown action: " + args[0]);
-                        Environment.Exit(1);
-                        break;
+                    foreach (string str in new[]{
+                        $" ==== {Name} v{Version} - https://github.com/ORelio/Spotlight-Downloader ====",
+                        "",
+                        "Retrieve Windows Spotlight images by requesting the Microsoft Spotlight API.",
+                        $"{Name} can also define images as wallpaper and system-wide lockscreen image.",
+                        "",
+                        "Usage:",
+                        $"  {Name}.exe <action> [arguments]",
+                        "  Only one action must be provided, as first argument",
+                        "  Then, provide any number of arguments from the list below.",
+                        "",
+                        "Actions:",
+                        "  urls                Query Spotlight API and print image URLs to standard output",
+                        "  download            Download all images and print file path to standard output",
+                        "  wallpaper           Download one random image and define it as wallpaper",
+                        "  lockscreen          Download one random image and define it as global lockscreen",
+                        "",
+                        "Arguments:",
+                        "  --help              Show detailed program usage (this message)",
+                        "  --single            Print only one random url or download only one image as spotlight.jpg",
+                        "  --many              Try downloading as much images as possible by calling API many times",
+                        "  --amount <n>        Stop downloading after <n> images successfully downloaded, implies --many",
+                        "  --cache-size <n>    Only keep <n> most recent images in the output directory, delete others",
+                        "  --portrait          Force portrait image instead of autodetecting from current screen res",
+                        "  --landscape         Force landscape image instead of autodetecting from current screen res",
+                        "  --locale <xx-XX>    Force specified locale, e.g. en-US, instead of autodetecting from system",
+                        "  --all-locales       Attempt to download images for all known Spotlight locales, implies --many",
+                        "  --outdir <dir>      Set output directory instead of defaulting to working directory",
+                        "  --outname <name>    Set output file name as <name>.ext for --single or --embed-meta",
+                        "  --api-tries <n>     Amount of unsuccessful API calls before giving up. Default is 3.",
+                        "  --api-version <v>   Spotlight API version: 3 (Windows 10) or 4 (Windows 11). Default is 4",
+                        "  --skip-integrity    Skip integrity check: file size and sha256 (API v3) or parse image (API v4)",
+                        "  --metadata          Also save image metadata such as title & copyright as <image-name>.txt",
+                        "  --embed-meta        When available, embed metadata into wallpaper or lockscreen image",
+                        "  --from-file         Set the specified file as wallpaper/lockscreen instead of downloading",
+                        "  --from-dir          Set a random image from the specified directory as wallpaper/lockscreen",
+                        "  --allusers          Define the lockscreen image system-wide (requires admin privileges)",
+                        "  --restore           Restore the default system lockscreen image (requires admin privileges)",
+                        "  --verbose           Display additional status messages while downloading images from API",
+                        "",
+                        "Exit codes:",
+                        "  0                   Success",
+                        "  1                   Invalid arguments",
+                        "  2                   Spotlight API request failure",
+                        "  3                   Image download failure or Failed to write image to disk",
+                        "  4                   Failed to define image as wallpaper or lock screen image"
+                    })
+                    {
+                        await Console.Error.WriteLineAsync(str).ConfigureAwait(false);
+                    }
+                    Environment.Exit(1);
+                }
+                else
+                {
+                    await Console.Error.WriteLineAsync(ex.Message).ConfigureAwait(false);
+                    Environment.Exit(1);
+                }
+            }
+
+            // Main logic using parsed arguments
+            try
+            {
+                Queue<string> remainingLocales = new();
+
+                if (pArgs.AllLocales)
+                {
+                    remainingLocales = new Queue<string>(Locales.AllKnownSpotlightLocales);
+                    await Console.Error.WriteLineAsync($"Starting download using {remainingLocales.Count} locales").ConfigureAwait(false);
+                    pArgs.Locale = remainingLocales.Dequeue();
+                    await Console.Error.WriteLineAsync($"Switching to {pArgs.Locale} - {remainingLocales.Count + 1} locales remaining").ConfigureAwait(false);
                 }
 
-                if (args.Length > 1)
+                int downloadCount = 0;
+                int noNewImgCount = 0;
+
+                do
                 {
-                    for (int i = 1; i < args.Length; i++)
+                    try
                     {
-                        switch (args[i].ToLower())
+                        SpotlightImage[] images = (pArgs.FromFile != null && (pArgs.Action == "wallpaper" || pArgs.Action == "lockscreen"))
+                            ? [new SpotlightImage()]
+                            : await SpotlightApi.GetImageUrlsAsync(pArgs.Portrait, pArgs.Locale, pArgs.ApiTryCount, pArgs.ApiVersion).ConfigureAwait(false);
+
+                        if (images.Length < 1)
                         {
-                            case "--single":
-                                singleImage = true;
-                                break;
-                            case "--many":
-                                downloadMany = true;
-                                break;
-                            case "--amount":
-                                i++;
-                                downloadMany = true;
-                                if (i >= args.Length)
-                                {
-                                    Console.Error.WriteLine("--amount expects an additional argument.");
-                                    Environment.Exit(1);
-                                }
-                                if (!int.TryParse(args[i], out downloadAmount) || downloadAmount < 0)
-                                {
-                                    Console.Error.WriteLine("Download amount must be a valid and positive number.");
-                                    Environment.Exit(1);
-                                }
-                                if (downloadAmount == 0)
-                                    downloadAmount = int.MaxValue;
-                                break;
-                            case "--cache-size":
-                                i++;
-                                if (i >= args.Length)
-                                {
-                                    Console.Error.WriteLine("--cache-size expects an additional argument.");
-                                    Environment.Exit(1);
-                                }
-                                if (!int.TryParse(args[i], out cacheSize) || cacheSize <= 0)
-                                {
-                                    Console.Error.WriteLine("Cache size must be a valid and strictly positive number.");
-                                    Environment.Exit(1);
-                                }
-                                break;
-                            case "--maxres":
-                                maximumRes = true;
-                                break;
-                            case "--portrait":
-                                portrait = true;
-                                break;
-                            case "--landscape":
-                                portrait = false;
-                                break;
-                            case "--locale":
-                                i++;
-                                if (i < args.Length)
-                                    locale = args[i];
-                                else
-                                {
-                                    Console.Error.WriteLine("--locale expects an additional argument.");
-                                    Environment.Exit(1);
-                                }
-                                if (!System.Text.RegularExpressions.Regex.Match(locale, "^[a-z]{2}-[A-Z]{2}$").Success)
-                                {
-                                    Console.Error.WriteLine("--locale expected format is xx-XX, e.g. en-US. Locale '{0}' might not work.", locale);
-                                }
-                                break;
-                            case "--all-locales":
-                                allLocales = true;
-                                downloadMany = true;
-                                break;
-                            case "--outdir":
-                                i++;
-                                if (i < args.Length)
-                                    outputDir = args[i];
-                                else
-                                {
-                                    Console.Error.WriteLine("--outdir expects an additional argument.");
-                                    Environment.Exit(1);
-                                }
-                                if (!Directory.Exists(outputDir))
-                                {
-                                    Console.Error.WriteLine("Output directory '" + outputDir + "' does not exist.");
-                                    Environment.Exit(1);
-                                }
-                                break;
-                            case "--outname":
-                                i++;
-                                if (i < args.Length)
-                                    outputName = args[i];
-                                else
-                                {
-                                    Console.Error.WriteLine("--outname expects an additional argument.");
-                                    Environment.Exit(1);
-                                }
-                                foreach (char invalidChar in Path.GetInvalidFileNameChars())
-                                {
-                                    if (outputName.Contains(invalidChar))
-                                    {
-                                        Console.Error.WriteLine("Invalid character '" + invalidChar + "' in specified output file name.");
-                                        Environment.Exit(1);
-                                    }
-                                }
-                                break;
-                            case "--api-tries":
-                                i++;
-                                if (i >= args.Length)
-                                {
-                                    Console.Error.WriteLine("--api-tries expects an additional argument.");
-                                    Environment.Exit(1);
-                                }
-                                if (!int.TryParse(args[i], out apiTryCount) || apiTryCount <= 0)
-                                {
-                                    Console.Error.WriteLine("API tries must be a valid and strictly positive number.");
-                                    Environment.Exit(1);
-                                }
-                                break;
-                            case "--api-version":
-                                i++;
-                                if (i >= args.Length)
-                                {
-                                    Console.Error.WriteLine("--api-version expects an additional argument.");
-                                    Environment.Exit(1);
-                                }
-                                int apiVerInt;
-                                if (!int.TryParse(args[i], out apiVerInt) || apiVerInt < 3 || apiVerInt > 4)
-                                {
-                                    Console.Error.WriteLine("Must set a supported API version: 3 or 4");
-                                    Environment.Exit(1);
-                                }
-                                apiVersion = apiVerInt == 3 ? Spotlight.ApiVersion.v3 : Spotlight.ApiVersion.v4;
-                                break;
-                            case "--skip-integrity":
-                                integrityCheck = false;
-                                break;
-                            case "--metadata":
-                                metadata = true;
-                                break;
-                            case "--inconsistent-metadata":
-                                metadata = true;
-                                metadataAllowInconsistent = true;
-                                break;
-                            case "--embed-meta":
-                                embedMetadata = true;
-                                break;
-                            case "--from-file":
-                                i++;
-                                if (i < args.Length)
-                                    fromFile = args[i];
-                                else
-                                {
-                                    Console.Error.WriteLine("--from-file expects an additional argument.");
-                                    Environment.Exit(1);
-                                }
-                                if (!File.Exists(fromFile))
-                                {
-                                    Console.Error.WriteLine("Input file '" + fromFile + "' does not exist.");
-                                    Environment.Exit(1);
-                                }
-                                break;
-                            case "--from-dir":
-                                i++;
-                                if (i < args.Length)
-                                    fromFile = args[i];
-                                else
-                                {
-                                    Console.Error.WriteLine("--from-dir expects an additional argument.");
-                                    Environment.Exit(1);
-                                }
-                                if (Directory.Exists(fromFile))
-                                {
-                                    string[] jpegFiles = Directory.EnumerateFiles(fromFile, "*.jpg", SearchOption.AllDirectories).ToArray();
-                                    if (jpegFiles.Any())
-                                    {
-                                        fromFile = jpegFiles[new Random().Next(0, jpegFiles.Length)];
-                                    }
-                                    else
-                                    {
-                                        Console.Error.WriteLine("Input directory '" + fromFile + "' does not contain JPG files.");
-                                        Environment.Exit(1);
-                                    }
-                                }
-                                else
-                                {
-                                    Console.Error.WriteLine("Input directory '" + fromFile + "' does not exist.");
-                                    Environment.Exit(1);
-                                }
-                                break;
-                            case "--restore":
-                                if (action == "lockscreen")
-                                {
-                                    if (FileSystemAdmin.IsAdmin())
-                                    {
-                                        try
-                                        {
-                                            Lockscreen.RestoreDefaultGlobalLockscreen();
-                                            Environment.Exit(0);
-                                        }
-                                        catch (Exception e)
-                                        {
-                                            Console.Error.WriteLine(e.GetType() + ": " + e.Message);
-                                            Environment.Exit(4);
-                                        }
-                                    }
-                                    else
-                                    {
-                                        Console.Error.WriteLine("This program must run as administrator to restore the global lockscreen.");
-                                        Environment.Exit(4);
-                                    }
-                                }
-                                break;
-                            case "--verbose":
-                                verbose = true;
-                                break;
-                            default:
-                                Console.Error.WriteLine("Unknown argument: " + args[i]);
-                                Environment.Exit(1);
-                                break;
+                            await Console.Error.WriteLineAsync($"{Name} received an empty image set from Spotlight API.").ConfigureAwait(false);
+                            Environment.Exit(2);
                         }
-                    }
 
-                    if (downloadMany && cacheSize < downloadAmount)
-                    {
-                        Console.Error.WriteLine(
-                            "Download amount ({0}) is greater than cache size ({1}). Reducing download amount to {1}.",
-                            downloadAmount == int.MaxValue ? "MAX" : downloadAmount.ToString(),
-                            cacheSize
-                        );
-                        downloadAmount = cacheSize;
-                    }
+                        Random rng = new();
+#pragma warning disable CA5394
+                        // false alarm: just randomizing the order of the images, no need for cryptographic purposes
+                        SpotlightImage randomImage = images[rng.Next(images.Length)];
+#pragma warning restore CA5394
 
-                    if (downloadMany && metadata && allLocales && !metadataAllowInconsistent)
-                    {
-                        Console.Error.WriteLine("--metadata combined with --all-locales will produce random metadata languages.");
-                        Console.Error.WriteLine("Please relaunch with --inconsistent-metadata if you really intend to do this.");
-                        Environment.Exit(1);
-                    }
-                }
+                        if (pArgs.Action == "urls")
+                        {
+                            if (pArgs.SingleImage)
+                            {
+                                Console.WriteLine(randomImage.Uri);
+                            }
+                            else
+                            {
+                                foreach (SpotlightImage image in images)
+                                {
+                                    Console.WriteLine(image.Uri);
+                                }
+                            }
+                            Environment.Exit(0);
+                        }
 
-                try
-                {
-                    Queue<string> remainingLocales = new Queue<string>();
-
-                    if (allLocales)
-                    {
-                        remainingLocales = new Queue<string>(Locales.AllKnownSpotlightLocales);
-                        Console.Error.WriteLine(String.Format("Starting download using {0} locales", remainingLocales.Count));
-                        locale = remainingLocales.Dequeue();
-                        Console.Error.WriteLine(String.Format("Switching to {0} - {1} locales remaining", locale, remainingLocales.Count + 1));
-                    }
-
-                    int downloadCount = 0;
-                    int noNewImgCount = 0;
-
-                    do
-                    {
                         try
                         {
-                            SpotlightImage[] images = (fromFile != null && (action == "wallpaper" || action == "lockscreen"))
-                                ? new[] { new SpotlightImage() } // Skip API request, we'll use a local file
-                                : Spotlight.GetImageUrls(maximumRes, portrait, locale, apiTryCount, apiVersion);
-
-                            if (images.Length < 1)
+                            if (pArgs.SingleImage || pArgs.Action == "wallpaper" || pArgs.Action == "lockscreen")
                             {
-                                Console.Error.WriteLine(Program.Name + " received an empty image set from Spotlight API.");
-                                Environment.Exit(2);
-                            }
+                                string imageFile = null;
 
-                            SpotlightImage randomImage = images.OrderBy(p => new Guid()).First();
+                                if (!pArgs.Restore)
+                                {
+                                    imageFile = pArgs.FromFile ?? await randomImage.DownloadToFile(pArgs.OutputDir, pArgs.IntegrityCheck, pArgs.Metadata, pArgs.OutputName, pArgs.ApiTryCount).ConfigureAwait(false);
 
-                            if (action == "urls")
-                            {
-                                if (singleImage)
-                                {
-                                    Console.WriteLine(randomImage.Uri);
-                                }
-                                else
-                                {
-                                    foreach (SpotlightImage image in images)
+                                    Console.WriteLine(imageFile);
+
+                                    if (pArgs.EmbedMetadata)
                                     {
-                                        Console.WriteLine(image.Uri);
+                                        imageFile = SpotlightImage.EmbedMetadata(
+                                            imageFile,
+                                            pArgs.OutputDir,
+                                            pArgs.OutputName ?? Path.GetFileNameWithoutExtension(imageFile)
+                                        );
                                     }
+                                }
+
+                                if (pArgs.Action == "wallpaper")
+                                {
+                                    try
+                                    {
+                                        WallpaperHelper.SetWallpaper(imageFile);
+#pragma warning disable CA1303
+                                        // no plans for localization yet so temporary disable CA1303
+                                        Console.WriteLine("Wallpaper set successfully.");
+#pragma warning restore CA1303
+                                    }
+                                    catch (Exception e)
+                                    {
+                                        await Console.Error.WriteLineAsync("Failed to set wallpaper: " + e.Message).ConfigureAwait(false);
+                                        Environment.Exit(4);
+                                        throw;
+                                    }
+                                }
+                                else if (pArgs.Action == "lockscreen")
+                                {
+                                    var lockscreenSuccess = true;
+                                    if (pArgs.Restore)
+                                    {
+                                        lockscreenSuccess &= await LockScreenHelper.SetUserImage(null).ConfigureAwait(false);
+                                        if (pArgs.AllUsers)
+                                        {
+                                            lockscreenSuccess &= await LockScreenHelper.SetSystemImage(null).ConfigureAwait(false);
+                                            LockScreenHelper.PolicySetSpotlightEnabled(true); // Enterprise/Education only, has no effect otherwise
+                                        }
+                                    }
+                                    else
+                                    {
+                                        lockscreenSuccess &= await LockScreenHelper.SetUserImage(imageFile).ConfigureAwait(false);
+                                        await LockScreenHelper.DisableTipsCurrentUser().ConfigureAwait(false); // Works on all editions, but might be less reliable
+                                        if (pArgs.AllUsers)
+                                        {
+                                            lockscreenSuccess &= await LockScreenHelper.SetSystemImage(imageFile).ConfigureAwait(false);
+                                            LockScreenHelper.PolicySetSpotlightEnabled(false); // Enterprise/Education only, but more reliable
+                                        }
+                                    }
+                                    if (!lockscreenSuccess)
+                                        Environment.Exit(4);
                                 }
                                 Environment.Exit(0);
                             }
 
-                            try
+                            downloadCount = 0;
+
+                            foreach (SpotlightImage image in images)
                             {
-                                if (singleImage || action == "wallpaper" || action == "lockscreen")
+                                string imagePath = image.GetFilePath(pArgs.OutputDir);
+                                if (!File.Exists(imagePath))
                                 {
-                                    string imageFile = fromFile ?? randomImage.DownloadToFile(outputDir, integrityCheck, metadata, outputName, apiTryCount);
-                                    if (embedMetadata)
-                                        imageFile = SpotlightImage.EmbedMetadata(imageFile, outputDir, outputName);
-                                    Console.WriteLine(imageFile);
-                                    if (action == "wallpaper")
+                                    try
                                     {
-                                        try
-                                        {
-                                            Desktop.SetWallpaper(imageFile);
-                                        }
-                                        catch (Exception e)
-                                        {
-                                            Console.Error.WriteLine(e.GetType() + ": " + e.Message);
-                                            Environment.Exit(4);
-                                        }
+                                        Console.WriteLine(await image.DownloadToFile(pArgs.OutputDir, pArgs.IntegrityCheck, pArgs.Metadata, null, pArgs.ApiTryCount).ConfigureAwait(false));
+                                        downloadCount++;
+                                        pArgs.DownloadAmount--;
+                                        if (pArgs.DownloadAmount <= 0)
+                                            break;
                                     }
-                                    else if (action == "lockscreen")
+                                    catch (InvalidDataException)
                                     {
-                                        if (FileSystemAdmin.IsAdmin())
-                                        {
-                                            try
-                                            {
-                                                Lockscreen.SetGlobalLockscreen(imageFile);
-                                            }
-                                            catch (Exception e)
-                                            {
-                                                Console.Error.WriteLine(e.GetType() + ": " + e.Message);
-                                                Environment.Exit(4);
-                                            }
-                                        }
-                                        else
-                                        {
-                                            Console.Error.WriteLine("This program must run as administrator to change the global lockscreen.");
-                                            Environment.Exit(4);
-                                        }
-                                    }
-                                    Environment.Exit(0);
-                                }
-
-                                downloadCount = 0;
-
-                                foreach (SpotlightImage image in images)
-                                {
-                                    string imagePath = image.GetFilePath(outputDir);
-                                    if (!File.Exists(imagePath))
-                                    {
-                                        try
-                                        {
-                                            Console.WriteLine(image.DownloadToFile(outputDir, integrityCheck, metadata, null, apiTryCount));
-                                            downloadCount++;
-                                            downloadAmount--;
-                                            if (downloadAmount <= 0)
-                                                break;
-                                        }
-                                        catch (InvalidDataException)
-                                        {
-                                            Console.Error.WriteLine("Skipping invalid image: " + image.Uri);
-                                        }
+                                        await Console.Error.WriteLineAsync($"Skipping invalid image: {image.Uri}").ConfigureAwait(false);
                                     }
                                 }
-
-                                if (verbose)
-                                {
-                                    Console.Error.WriteLine("Successfully downloaded: " + downloadCount + " images.");
-                                    Console.Error.WriteLine("Already downloaded: " + (images.Length - downloadCount) + " images.");
-                                }
-
-                                if (downloadCount == 0)
-                                    noNewImgCount++;
-                                else noNewImgCount = 0;
                             }
-                            catch (Exception e)
+
+                            if (pArgs.Verbose)
                             {
-                                Console.Error.WriteLine(e.GetType() + ": " + e.Message);
-                                Environment.Exit(3);
+                                await Console.Error.WriteLineAsync($"Successfully downloaded: {downloadCount} images.").ConfigureAwait(false);
+                                await Console.Error.WriteLineAsync($"Already downloaded: {images.Length - downloadCount} images.").ConfigureAwait(false);
                             }
-                        }
-                        catch (Exception)
-                        {
-                            if (allLocales && remainingLocales.Count > 0)
-                            {
-                                // Force switch to next locale
-                                noNewImgCount = int.MaxValue;
-                            }
-                            else throw;
-                        }
 
-                        if (allLocales && noNewImgCount >= 50 && remainingLocales.Count > 0)
-                        {
-                            noNewImgCount = 0;
-                            locale = remainingLocales.Dequeue();
-                            Console.Error.WriteLine(String.Format("Switching to {0} - {1} locales remaining", locale, remainingLocales.Count + 1));
+                            if (downloadCount == 0)
+                                noNewImgCount++;
+                            else noNewImgCount = 0;
                         }
-
-                    } while (downloadMany && (downloadCount > 0 || noNewImgCount < 50) && downloadAmount > 0);
-
-                    if (cacheSize < int.MaxValue && cacheSize > 0)
-                    {
-                        foreach (FileInfo imgToDelete in
-                            Directory.GetFiles(outputDir, "*.jpg", SearchOption.TopDirectoryOnly)
-                            .Select(filePath => new FileInfo(filePath))
-                            .OrderByDescending(fileInfo => fileInfo.CreationTime)
-                            .Skip(cacheSize))
+                        catch (Exception e)
                         {
-                            string metadataFile = SpotlightImage.GetMetaLocation(imgToDelete.FullName);
-                            if (File.Exists(metadataFile))
-                                File.Delete(metadataFile);
-                            imgToDelete.Delete();
+                            await Console.Error.WriteLineAsync($"{e.GetType()}: {e.Message}").ConfigureAwait(false);
+                            Environment.Exit(3);
+                            throw;
                         }
                     }
+                    catch (Exception)
+                    {
+                        if (pArgs.AllLocales && remainingLocales.Count > 0)
+                        {
+                            // Force switch to next locale
+                            noNewImgCount = int.MaxValue;
+                        }
+                        else throw;
+                    }
 
-                    Environment.Exit(0);
-                }
-                catch (Exception e)
+                    if (pArgs.AllLocales && noNewImgCount >= 50 && remainingLocales.Count > 0)
+                    {
+                        noNewImgCount = 0;
+                        pArgs.Locale = remainingLocales.Dequeue();
+                        await Console.Error.WriteLineAsync($"Switching to {pArgs.Locale} - {remainingLocales.Count + 1} locales remaining").ConfigureAwait(false);
+                    }
+
+                } while (pArgs.DownloadMany && (downloadCount > 0 || noNewImgCount < 50) && pArgs.DownloadAmount > 0);
+
+                if (pArgs.CacheSize < int.MaxValue && pArgs.CacheSize > 0)
                 {
-                    Console.Error.WriteLine(e.GetType() + ": " + e.Message);
-                    Environment.Exit(2);
+                    foreach (FileInfo imgToDelete in
+                        Directory.GetFiles(pArgs.OutputDir, "*.jpg", SearchOption.TopDirectoryOnly)
+                        .Select(filePath => new FileInfo(filePath))
+                        .OrderByDescending(fileInfo => fileInfo.CreationTime)
+                        .Skip(pArgs.CacheSize))
+                    {
+                        string metadataFile = SpotlightImage.GetMetaLocation(imgToDelete.FullName);
+                        if (File.Exists(metadataFile))
+                            File.Delete(metadataFile);
+                        imgToDelete.Delete();
+                    }
                 }
-            }
 
-            foreach (string str in new[]{
-                    " ==== " + Program.Name + " v" + Program.Version + " - By ORelio - Microzoom.fr ====",
-                    "",
-                    "Retrieve Windows Spotlight images by requesting the Microsoft Spotlight API.",
-                    Program.Name + " can also define images as wallpaper and system-wide lockscreen image.",
-                    "",
-                    "Usage:",
-                    "  " + Program.Name + ".exe <action> [arguments]",
-                    "  Only one action must be provided, as first argument",
-                    "  Then, provide any number of arguments from the list below.",
-                    "",
-                    "Actions:",
-                    "  urls                Query Spotlight API and print image URLs to standard output",
-                    "  download            Download all images and print file path to standard output",
-                    "  wallpaper           Download one random image and define it as wallpaper",
-                    "  lockscreen          Download one random image and define it as global lockscreen",
-                    "",
-                    "Arguments:",
-                    "  --help              Show detailed program usage (this message)",
-                    "  --single            Print only one random url or download only one image as spotlight.jpg",
-                    "  --many              Try downloading as much images as possible by calling API many times",
-                    "  --amount <n>        Stop downloading after <n> images successfully downloaded, implies --many",
-                    "  --cache-size <n>    Only keep <n> most recent images in the output directory, delete others",
-                    "  --portrait          Force portrait image instead of autodetecting from current screen res",
-                    "  --landscape         Force landscape image instead of autodetecting from current screen res",
-                    "  --locale <xx-XX>    Force specified locale, e.g. en-US, instead of autodetecting from system",
-                    "  --all-locales       Attempt to download images for all known Spotlight locales, implies --many",
-                    "  --outdir <dir>      Set output directory instead of defaulting to working directory",
-                    "  --outname <name>    Set output file name as <name>.ext for --single or --embed-meta",
-                    "  --api-tries <n>     Amount of unsuccessful API calls before giving up. Default is 3.",
-                    "  --api-version <v>   Spotlight API version: 3 (Windows 10) or 4 (Windows 11). Default is 4",
-                    "  --skip-integrity    Skip integrity check: file size and sha256 (API v3) or parse image (API v4)",
-                    "  --maxres            Force maximum image resolution (API v3). API v4 always returns max res.",
-                    "  --metadata          Also save image metadata such as title & copyright as <image-name>.txt",
-                    "  --embed-meta        When available, embed metadata into wallpaper or lockscreen image",
-                    "  --from-file         Set the specified file as wallpaper/lockscreen instead of downloading",
-                    "  --from-dir          Set a random image from the specified directory as wallpaper/lockscreen",
-                    "  --restore           Restore the default lockscreen image, has no effect with other actions",
-                    "  --verbose           Display additional status messages while downloading images from API",
-                    "",
-                    "Exit codes:",
-                    "  0                   Success",
-                    "  1                   Invalid arguments",
-                    "  2                   Spotlight API request failure",
-                    "  3                   Image download failure or Failed to write image to disk",
-                    "  4                   Failed to define image as wallpaper or lock screen image"
-                })
-            {
-                Console.Error.WriteLine(str);
+                Environment.Exit(0);
             }
-            Environment.Exit(1);
+            catch (Exception e)
+            {
+                await Console.Error.WriteLineAsync($"{e.GetType()}: {e.Message}").ConfigureAwait(false);
+                Environment.Exit(2);
+                throw;
+            }
         }
     }
 }

@@ -12,4 +12,4 @@ if not "%errorlevel%" == "0" (
     exit
 )
 
-SpotlightDownloader lockscreen --restore
+SpotlightDownloader lockscreen --restore --allusers
