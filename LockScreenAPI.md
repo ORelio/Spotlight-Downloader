@@ -1,4 +1,4 @@
-﻿# Lockscreen API
+﻿# LockScreen API
 
 This documentation list methods of changing the Windows lock screen.
 
@@ -17,7 +17,7 @@ Windows 7 enforces a limit of 250 KiB, so SpotlightDL will recompress the image 
 
 ## Windows 8 and greater
 
-### User Lockscreen API
+### User LockScreen API
 
 Setting a lockscreen image for the current user account is straightforward using the .NET API:
 
@@ -28,9 +28,9 @@ await LockScreen.SetImageFileAsync(file);
 
 Reference: [LockScreen.SetImageFileAsync](https://learn.microsoft.com/en-us/uwp/api/windows.system.userprofile.lockscreen.setimagefileasync?view=winrt-26100)
 
-### System Lockscreen Policy
+### System LockScreen Policy (GPO)
 
-_Require administrator privileges. Works only with Enterprise and Education editions._
+_Require administrator privileges. Works will all editions **except Home and Pro**._
 
 **`gpedit.msc`**
 
@@ -53,14 +53,36 @@ Windows Registry Editor Version 5.00
 "LockscreenImage"="C:\\Path\\To\\lockscreen.png"
 ```
 
-Reference: [How to Change the Default Lock Screen Image using GPO](https://www.cloudtechadmin.com/how-to-change-the-default-lock-screen-image-using-gpo/)
+References:
+* [Configure the desktop and lock screen backgrounds](https://learn.microsoft.com/en-us/windows/configuration/background/?tabs=gpo#configure-the-lock-screen-background)
+* [How to Change the Default Lock Screen Image using GPO](https://www.cloudtechadmin.com/how-to-change-the-default-lock-screen-image-using-gpo/)
+
+### System LockScreen Policy (CSP)
+
+_Require administrator privileges. Works will all editions **except Home**. Windows 10 1709 or greater._
+
+> [!NOTE]
+> This policy will lock down the lockscreen settings in personalization panel.
+> Remove the "PersonalizationCSP" registry key to unlock.
+
+```
+Windows Registry Editor Version 5.00
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\PersonalizationCSP]
+"LockScreenImagePath"="C:\\Path\\To\\lockscreen.png"
+```
+
+References:
+* [Configure the desktop and lock screen backgrounds](https://learn.microsoft.com/en-us/windows/configuration/background/?tabs=intune#configure-the-lock-screen-background)
+* [LockScreenImageUrl](https://learn.microsoft.com/en-us/windows/client-management/mdm/personalization-csp#lockscreenimageurl)
+* [Set Desktop Wallpaper and Logon Screen Background via Group Policy](https://woshub.com/setting-desktop-wallpapers-background-using-group-policy/)
 
 ### By manipulating system files
 
 _That was the method implemented in Spotlight Downloader v1.x._
-_Require administrator privileges. Works with any Windows edition._
+_Require administrator privileges. Works with any Windows edition, but might break things._
 
-The global lock screen images for Windows 8 and 10 are stored as `C:\Windows\Web\Screen\imgXXX.jpg`.
+The global lock screen images for Windows 8+ are stored as `C:\Windows\Web\Screen\imgXXX.jpg`.
 SpotlightDL v1.x backups each image as `imgXXX.jpg.bak` if it does not already exists, then overwrite this file.
 
 The lock screen image cache, located at `C:\ProgramData\Microsoft\Windows\SystemData\S-1-5-18\ReadOnly\LockScreen_*`, must be cleared for the change to take effect.

@@ -2,7 +2,6 @@
 using System.Linq;
 using System.IO;
 using System.Runtime.InteropServices;
-using System.Security;
 using System.Security.Principal;
 using System.Threading.Tasks;
 
@@ -57,6 +56,7 @@ namespace SpotlightDownloader
                     {
                         Console.WriteLine(defaultLockscreen);
                         var file = await StorageFile.GetFileFromPathAsync(defaultLockscreen);
+                        Console.WriteLine($"Setting User LockScreen: {defaultLockscreen}");
                         await LockScreen.SetImageFileAsync(file);
                     }
                     else
@@ -71,20 +71,115 @@ namespace SpotlightDownloader
             }
             else if (File.Exists(imagePath))
             {
-                var file = await StorageFile.GetFileFromPathAsync(Path.GetFullPath(imagePath));
+                imagePath = Path.GetFullPath(imagePath);
+                var file = await StorageFile.GetFileFromPathAsync(imagePath);
+                Console.WriteLine($"Setting User LockScreen: {imagePath}");
                 await LockScreen.SetImageFileAsync(file);
             }
             else
             {
-                throw new FileNotFoundException(imagePath);
+#pragma warning disable CA1303
+                // no plans for localization yet so temporary disable CA1303
+                await Console.Error.WriteLineAsync($"File not found: {imagePath}").ConfigureAwait(false);
+#pragma warning restore CA1303
+                return false;
             }
 
             return true;
         }
 
-        private static RegistryKey HiveDefaultLockscreen = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry64);
-        private const string PathDefaultLockscreen = @"Software\Policies\Microsoft\Windows\Personalization";
-        private const string ValueDefaultLockcreen = "LockscreenImage";
+        private static readonly RegistryKey HiveUserSettingsLockscreen = RegistryKey.OpenBaseKey(RegistryHive.CurrentUser, RegistryView.Registry64);
+        private const string PathUserSettingsLockscreen = @"SOFTWARE\Microsoft\Windows\CurrentVersion\ContentDeliveryManager";
+        private static readonly string[] ValuesUserSettingsLockcreenTips = [
+            "SubscribedContent-338389Enabled",
+            "SubscribedContent-338388Enabled",
+            "SubscribedContent-338387Enabled",
+        ];
+
+        /// <summary>
+        /// Disable "Get fun facts, tips, tricks, and more on your lock screen" setting for the current user
+        /// </summary>
+        public static async Task<bool> DisableTipsCurrentUser()
+        {
+            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+#pragma warning disable CA1303
+                // no plans for localization yet so temporary disable CA1303
+                await Console.Error.WriteLineAsync("User lockscreen settings are not supported on this platform.").ConfigureAwait(false);
+#pragma warning restore CA1303
+                return false;
+            }
+
+            var keyUserSettingsLockscreen =
+                HiveUserSettingsLockscreen.OpenSubKey(PathUserSettingsLockscreen, true)
+                ?? HiveUserSettingsLockscreen.CreateSubKey(PathUserSettingsLockscreen, true);
+
+            foreach (var value in ValuesUserSettingsLockcreenTips)
+            {
+                keyUserSettingsLockscreen.SetValue(value, 0);
+            }
+
+            return true;
+        }
+
+        private static readonly string PathLocalPolicyEditor = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.System), "gpedit.msc");
+
+        /// <summary>
+        /// Check if local policy is supported by the current Windows Edition.
+        /// Windows Home edition has no local policy editor tool and will ignore policies if set in registry.
+        /// </summary>
+        /// <returns>TRUE if the system supports policies</returns>
+        public static bool LocalPolicySupported()
+        {
+            return File.Exists(PathLocalPolicyEditor);
+        }
+
+        /// <summary>
+        /// Check if the current process is running with elevated/administrator permissions
+        /// </summary>
+        /// <returns>TRUE if running elevated</returns>
+        public static bool IsAdmin()
+        {
+            AppDomain.CurrentDomain.SetPrincipalPolicy(PrincipalPolicy.WindowsPrincipal);
+            WindowsIdentity wi = WindowsIdentity.GetCurrent();
+            var wp = new WindowsPrincipal(wi);
+            return wp.IsInRole(WindowsBuiltInRole.Administrator);
+        }
+
+        private static readonly RegistryKey HiveDisableSpotlight = RegistryKey.OpenBaseKey(RegistryHive.CurrentUser, RegistryView.Registry64);
+        private const string PathDisableSpotlight = @"Software\Policies\Microsoft\Windows\CloudContent";
+        private const string ValueDisableSpotlight = "DisableWindowsSpotlightFeatures";
+
+        /// <summary>
+        /// Enable or Disable Spotlight features system-wide using Local Policy (GPO)
+        /// </summary>
+        /// <remarks>Only works for Enterprise and Education editions</remarks>
+        /// <param name="enabled">True: Enable Spotlight features (default). False: Disable spotlight features</param>
+        public static bool PolicySetSpotlightEnabled(bool enabled)
+        {
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows) && LocalPolicySupported() && IsAdmin())
+            {
+                var keyDisableSpotlight = HiveDisableSpotlight.OpenSubKey(PathDisableSpotlight, true) ?? HiveDisableSpotlight.CreateSubKey(PathDisableSpotlight, true);
+
+                if (enabled)
+                {
+                    Console.WriteLine($"HKLM\\{PathDisableSpotlight} -> {'-'}{ValueDisableSpotlight}");
+                    keyDisableSpotlight.DeleteValue(ValueDisableSpotlight, false);
+                }
+                else
+                {
+                    Console.WriteLine($"HKLM\\{PathDisableSpotlight} -> {ValueDisableSpotlight}={1}");
+                    keyDisableSpotlight.SetValue(ValueDisableSpotlight, 1);
+                }
+
+                return true;
+            }
+            return false;
+        }
+
+        private static readonly RegistryKey HiveSystemPolicyLockscreen = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry64);
+        private const string PathSystemPolicyLockscreen = @"SOFTWARE\Microsoft\Windows\CurrentVersion\PersonalizationCSP";
+        private const string ValueSystemPolicyLockcreen = "LockScreenImagePath";
 
         /// <summary>
         /// Replace the system lockscreen image for Windows 10 and later through local policy.
@@ -102,259 +197,48 @@ namespace SpotlightDownloader
                 return false;
             }
 
-            var keyDefaultLockscreen = HiveDefaultLockscreen.OpenSubKey(PathDefaultLockscreen, true) ?? HiveDefaultLockscreen.CreateSubKey(PathDefaultLockscreen, true);
+            if (!LocalPolicySupported())
+            {
+#pragma warning disable CA1303
+                // no plans for localization yet so temporary disable CA1303
+                await Console.Error.WriteLineAsync("System lockscreen change is not supported on Windows Home edition.").ConfigureAwait(false);
+#pragma warning restore CA1303
+                return false;
+            }
+
+            if (!IsAdmin())
+            {
+#pragma warning disable CA1303
+                // no plans for localization yet so temporary disable CA1303
+                await Console.Error.WriteLineAsync("Not running as administrator: Cannot set system-wide lockscreen image.").ConfigureAwait(false);
+#pragma warning restore CA1303
+                return false;
+            }
+
+            var keyDefaultLockscreen =
+                HiveSystemPolicyLockscreen.OpenSubKey(PathSystemPolicyLockscreen, true)
+                ?? HiveSystemPolicyLockscreen.CreateSubKey(PathSystemPolicyLockscreen, true);
 
             if (imagePath == null)
             {
-                keyDefaultLockscreen.DeleteValue(ValueDefaultLockcreen, false);
+                Console.WriteLine($"HKLM\\{PathSystemPolicyLockscreen} -> {'-'}{ValueSystemPolicyLockcreen}");
+                keyDefaultLockscreen.DeleteValue(ValueSystemPolicyLockcreen, false);
             }
             else if (File.Exists(imagePath))
             {
-                keyDefaultLockscreen.SetValue(ValueDefaultLockcreen, Path.GetFullPath(imagePath));
+                Console.WriteLine($"HKLM\\{PathSystemPolicyLockscreen} -> {ValueSystemPolicyLockcreen}={Path.GetFullPath(imagePath)}");
+                keyDefaultLockscreen.SetValue(ValueSystemPolicyLockcreen, Path.GetFullPath(imagePath));
             }
             else
             {
-                throw new FileNotFoundException(imagePath);
+#pragma warning disable CA1303
+                // no plans for localization yet so temporary disable CA1303
+                await Console.Error.WriteLineAsync($"File not found: {imagePath}").ConfigureAwait(false);
+#pragma warning restore CA1303
+                return false;
             }
 
             return true;
-        }
-
-        private static RegistryKey HiveDisableSpotlight = RegistryKey.OpenBaseKey(RegistryHive.CurrentUser, RegistryView.Registry64);
-        private const string PathDisableSpotlight = @"Software\Policies\Microsoft\Windows\CloudContent";
-        private const string ValueDisableSpotlight = "DisableWindowsSpotlightFeatures";
-
-        /// <summary>
-        /// Enable or Disable Spotlight features for the current user.
-        /// </summary>
-        /// <remarks>Policy only works for Enterprise and Education editions.</remarks>
-        /// <param name="enabled">True: Enable Spotlight features (default). False: Disable spotlight features</param>
-        public static async Task<bool> SetSpotlightEnabled(bool enabled)
-        {
-            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-            {
-#pragma warning disable CA1303
-                // no plans for localization yet so temporary disable CA1303
-                await Console.Error.WriteLineAsync("System policy change is not supported on this platform.").ConfigureAwait(false);
-#pragma warning restore CA1303
-                return false;
-            }
-
-            var keyDisableSpotlight = HiveDisableSpotlight.OpenSubKey(PathDisableSpotlight, true) ?? HiveDisableSpotlight.CreateSubKey(PathDisableSpotlight, true);
-
-            if (enabled)
-            {
-                keyDisableSpotlight.DeleteValue(ValueDisableSpotlight, false);
-            }
-            else
-            {
-                keyDisableSpotlight.SetValue(ValueDisableSpotlight, 1);
-            }
-
-            return true;
-        }
-
-        /// <summary>
-        /// Check if the current process is running with elevated/administrator permissions
-        /// </summary>
-        /// <returns>TRUE if running elevated</returns>
-        public static bool IsAdmin()
-        {
-            AppDomain.CurrentDomain.SetPrincipalPolicy(PrincipalPolicy.WindowsPrincipal);
-            WindowsIdentity wi = WindowsIdentity.GetCurrent();
-            WindowsPrincipal wp = new WindowsPrincipal(wi);
-            return wp.IsInRole(WindowsBuiltInRole.Administrator);
-        }
-
-        /// <summary>
-        /// Set-up lockscreen image and settings (user, system and policy)
-        /// </summary>
-        /// <remarks>
-        /// May requires Windows activation for user lockscreen.
-        /// System and policy only works with Enterprise, Education editions.
-        /// </remarks>
-        /// <param name="path">Path to the new image file for lockscreen</param>
-        public static async Task<bool> Setup(string imagePath)
-        {
-            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-            {
-#pragma warning disable CA1303
-                // no plans for localization yet so temporary disable CA1303
-                await Console.Error.WriteLineAsync("Lockscreen change is not supported on this platform.").ConfigureAwait(false);
-#pragma warning restore CA1303
-                return false;
-            }
-
-            if (!File.Exists(imagePath))
-            {
-                throw new FileNotFoundException(imagePath);
-            }
-
-            var success = true;
-
-            try
-            {
-                await SetUserImage(imagePath).ConfigureAwait(false);
-
-#pragma warning disable CA1303
-                // no plans for localization yet so temporary disable CA1303
-                Console.WriteLine("User lockscreen set successfully.");
-#pragma warning restore CA1303
-            }
-            catch (Exception e)
-            {
-                await Console.Error.WriteLineAsync("Failed to set user lockscreen: " + e.Message).ConfigureAwait(false);
-                throw;
-            }
-
-            if (IsAdmin())
-            {
-                try
-                {
-                    await SetSpotlightEnabled(false).ConfigureAwait(false);
-
-    #pragma warning disable CA1303
-                    // no plans for localization yet so temporary disable CA1303
-                    Console.WriteLine("User policy set to disable built-in spotlight features (Enterprise, Education only).");
-    #pragma warning restore CA1303
-                }
-                catch (Exception e)
-                {
-                    if (e is UnauthorizedAccessException || e is SecurityException || e is IOException)
-                    {
-                        await Console.Error.WriteLineAsync("Failed to set user policy (Enterprise, Education only): " + e.Message).ConfigureAwait(false);
-                        success = false;
-                    }
-                    else
-                        throw;
-                }
-
-                try
-                {
-                    await SetSystemImage(imagePath).ConfigureAwait(false);
-
-#pragma warning disable CA1303
-                    // no plans for localization yet so temporary disable CA1303
-                    Console.WriteLine("System lockscreen set successfully (Enterprise, Education only).");
-#pragma warning restore CA1303
-                }
-                catch (Exception e)
-                {
-                    if (e is UnauthorizedAccessException || e is SecurityException || e is IOException)
-                    {
-                        await Console.Error.WriteLineAsync("Failed to set system lockscreen (Enterprise, Education only): " + e.Message).ConfigureAwait(false);
-                        success = false;
-                    }
-                    else
-                        throw;
-                }
-            }
-            else
-            {
-#pragma warning disable CA1303
-                // no plans for localization yet so temporary disable CA1303
-                Console.WriteLine("Not launched as admin: Not touching system lockscreen and policy (Enterprise, Education only).");
-#pragma warning restore CA1303
-            }
-
-            return success;
-        }
-
-        /// <summary>
-        /// Restore default lockscreen image and settings (user, system and policy)
-        /// </summary>
-        /// <remarks>
-        /// May requires Windows activation for user lockscreen.
-        /// System and policy only works with Enterprise, Education editions.
-        /// </remarks>
-        /// <param name="path">Path to the new image file for lockscreen</param>
-        public static async Task<bool> Restore()
-        {
-            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-            {
-#pragma warning disable CA1303
-                // no plans for localization yet so temporary disable CA1303
-                await Console.Error.WriteLineAsync("Lockscreen change is not supported on this platform.").ConfigureAwait(false);
-#pragma warning restore CA1303
-                return false;
-            }
-
-            var success = true;
-
-            try
-            {
-                await SetUserImage(null).ConfigureAwait(false);
-
-#pragma warning disable CA1303
-                // no plans for localization yet so temporary disable CA1303
-                Console.WriteLine("User lockscreen successfully reset.");
-#pragma warning restore CA1303
-            }
-            catch (Exception e)
-            {
-                if (e is FileNotFoundException)
-                {
-                    await Console.Error.WriteLineAsync("Failed to reset user lockscreen: Could not find default lock screen image").ConfigureAwait(false);
-                    success = false;
-                }
-                else
-                {
-                    await Console.Error.WriteLineAsync("Failed to reset user lockscreen: " + e.Message).ConfigureAwait(false);
-                    throw;
-                }
-            }
-
-            if (IsAdmin())
-            {
-                try
-                {
-                    await SetSpotlightEnabled(true).ConfigureAwait(false);
-
-    #pragma warning disable CA1303
-                    // no plans for localization yet so temporary disable CA1303
-                    Console.WriteLine("User policy reset to allow built-in spotlight features (Enterprise, Education only).");
-    #pragma warning restore CA1303
-                }
-                catch (Exception e)
-                {
-                    if (e is UnauthorizedAccessException || e is SecurityException || e is IOException)
-                    {
-                        await Console.Error.WriteLineAsync("Failed to reset user policy (Enterprise, Education only): " + e.Message).ConfigureAwait(false);
-                        success = false;
-                    }
-                    else
-                        throw;
-                }
-
-                try
-                {
-                    await SetSystemImage(null).ConfigureAwait(false);
-
-#pragma warning disable CA1303
-                    // no plans for localization yet so temporary disable CA1303
-                    Console.WriteLine("System lockscreen reset successfully (Enterprise, Education only).");
-#pragma warning restore CA1303
-                }
-                catch (Exception e)
-                {
-                    if (e is UnauthorizedAccessException || e is SecurityException || e is IOException)
-                    {
-                        await Console.Error.WriteLineAsync("Failed to reset system lockscreen (Enterprise, Education only): " + e.Message).ConfigureAwait(false);
-                        success = false;
-                    }
-                    else
-                        throw;
-                }
-            }
-            else
-            {
-#pragma warning disable CA1303
-                // no plans for localization yet so temporary disable CA1303
-                Console.WriteLine("Not launched as admin: Not touching system lockscreen and policy (Enterprise, Education only).");
-#pragma warning restore CA1303
-            }
-
-            return success;
         }
     }
 }

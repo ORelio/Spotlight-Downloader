@@ -5,7 +5,7 @@ SpotlightDL can also define images as wallpaper and system-wide lockscreen image
 
 It is useful in the following use cases:
  - **Download** most of the Spotlight library with maximum image resolution and metadata
- - Define Spotlight images as **ad-less** wallpaper and lockscreen
+ - Define Spotlight images as **ad-less** lockscreen or wallpaper
  - Chain SpotlightDL with your own scripts and apps using the **url mode**
 
 # Download
@@ -25,18 +25,22 @@ Download the [Zip Release](https://github.com/ORelio/Spotlight-Downloader/releas
 ![Screenshot: Launching Spotlight Batch file from File Explorer](Images/batch-script-example.png)
 
  - `spotlight-download-archive`: Download many images to a SpotlightArchive folder
- - `update-archive-and-wallpaper`: Feed the Archive and use one image as wallpaper
- - `update-archive-and-lockscreen`: Feed the Archive and use one image as lockscreen
+ - `update-archive-and-wallpaper`: Feed the Archive and use one image for your wallpaper
+ - `update-archive-and-lockscreen`: Feed the Archive and use one image for your lockscreen
+ - `update-archive-and-lockscreen-all-users`: Same, but system-wide (*)
  - `update-wallpaper`: Randomize desktop wallpaper (using a fixed-size cache)
- - `update-lockscreen`: Randomize system-wide lockscreen (using a fixed-size cache)
+ - `update-lockscreen`: Randomize your lockscreen (using a fixed-size cache)
+ - `update-lockscreen-all-users`: Same, but system-wide (*)
  - `restore-lockscreen`: Restore default system-wide lockscreen
  - `generate-manual`: Generate a text file with command-line usage
+
+_(*) Requires Administrator Privileges, and at least Pro edition (Home edition not supported)._
 
 If you wish to periodically launch one of these scripts, please refer to the [User Manual](README-En.txt).
 
 ## Lockscreen Install Program (Windows)
 
-Download the [Lockscreen Setup](https://github.com/ORelio/Spotlight-Downloader/releases) and install it. Your Lock Screen will be replaced with ad-free Spotlight images.
+Download the [Lockscreen Setup](https://github.com/ORelio/Spotlight-Downloader/releases) and install it. Your Lock Screen will be replaced with ad-free Spotlight images. It will also be set system-wide if supported by your Windows edition.
 
 If you no longer need it, you can uninstall it from [App & features](https://support.microsoft.com/en-us/windows/uninstall-or-remove-apps-and-programs-in-windows-4b55f974-2cc6-2d2b-d092-5905080eaf98) like other programs.
 
@@ -79,7 +83,7 @@ See [SpotlightAPI.md](SpotlightAPI.md) for details about the Spotlight API endpo
 
 ## Lock screen
 
-See [LockscreenAPI.md](LockscreenAPI.md) for details about the Lockscreen API.
+See [LockScreenAPI.md](LockScreenAPI.md) for details about the Lockscreen API.
 
 # License
 

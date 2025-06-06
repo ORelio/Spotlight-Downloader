@@ -10,7 +10,7 @@ SpotlightDL peut également définir des images en tant que fond d'écran ou sur
 
 Ce programme est utile dans les cas suivants :
  - Télécharger une grande partie de la bibliothèque d'images en définition maximale, avec fichiers de métadonnées
- - Définir les images en tant que fond d'écran ou écran de verrouillage en retirant les publicités
+ - Définir les images en tant qu'écran de verrouillage ou fond d'écran en retirant les publicités
  - Utiliser SpotlightDL dans vos propres scripts et programmes en utilisant le mode URL
 
 =============
@@ -34,8 +34,10 @@ update-archive-and-wallpaper
 
 update-archive-and-lockscreen
   Même fonctionnement qu'update-archive-and-wallpaper mais change l'écran de verouillage.
-  Si lancé en tant qu'administrateur sur une édition Entreprise ou Education de Windows,
-  le script change également l'écran de verrouillage global grâce à la fonction de stratégie de groupe.
+
+update-archive-and-lockscreen-all-users
+  Même fonctionnement qu'update-archive-and-wallpaper mais change l'écran de verouillage global du système.
+  Nécessite les droits admin et définit une politique Intune, non gérée sur les éditions familiales.
 
 update-wallpaper
   Ce script maintient un cache de quelques images et en définit une au hasard en tant que fond d'écran.
@@ -44,12 +46,14 @@ update-wallpaper
 
 update-lockscreen
   Même fonctionnement qu'update-wallpaper mais définit l'image en tant qu'écran de verouillage.
-  Si lancé en tant qu'administrateur sur une édition Entreprise ou Education de Windows,
-  le script change également l'écran de verrouillage global grâce à la fonction de stratégie de groupe.
+
+update-lockscreen-all-users
+  Même fonctionnement qu'update-wallpaper mais définit l'image en tant qu'écran de verouillage global du système.
+  Nécessite les droits admin et définit une politique Intune, non gérée sur les éditions familiales.
 
 restore-lockscreen
-  Ce script restaure l'écran de verrouillage par défaut.
-  Si lancé en administrateur, il supprime aussi les stratégies définies pour l'écran de verrouillage global.
+  Ce script restaure l'écran de verrouillage par défaut du système.
+  Cela déverrouille les réglages d'écran de verrouillage personnels bloqués par la politique Intune définie par certains scripts ci-dessus.
 
 generate-manual
   Ce script sauvegarde le mode d'emploi en ligne de commande dans un fichier texte,
@@ -117,12 +121,17 @@ R: Par défaut, la liste d'images retournées par un seul appel API: actuellemen
 Q: Certaines images n'ont pas de titre ou de copyright dans leur métadonnées?
 R: Ces informations ne sont pas fournies pour toutes les images au niveau de l'API Windows à la une.
 
-Q: L'écran de verrouillage n'apparaît pas lorsque je n'ai pas ouvert ma session ?
-R: L'image de l'écran système ne peut être configurée que sur les éditions Entreprise ou Education de Windows.
-R: Si vous avez une édition Education ou Entreprise, assurez-vous de lancer les scripts en tant qu'admin.
+Q: L'écran de verrouillage n'apparaît pas lorsque je n'ai PAS ouvert ma session ?
+R: Vous pourriez vouloir définir l'image pour tous les utilisateurs en utilisant le script adéquat.
+
+Q: Windows dit que mes réglages d'écran de verrouillage sont gérés par mon organisation !?
+R: Utilisez le script restore-lockscreen pour retirer la politique mise par update-lockscreen-all-users
 
 Q: Je ne veux pas du titre de l'image sur mon fond d'écran ou écran de verrouillage. Comment l'enlever ?
 R: Modifiez le fichier batch que vous utilisez pour enlever le paramètre --embed-meta dans la commande associée.
+
+Q: L'écran de verouillage apparait, mais je vois toujours des textes divers par-dessus ?
+R: Désactivez "Personnaliser l'écran de verrouillage, notamment avec des anecdotes et des astuces" dans vos réglages.
 
 Q: Je souhaite obtenir les métadonnées/images pour une langue spécifique. Comment faire ?
 R: Modifiez le fichier batch que vous utilisez pour ajouter le paramètre --locale fr-FR ou autre code de langue.
@@ -139,7 +148,7 @@ R: Non, dans ce cas les fichiers batch réutilisent les images déjà en cache, 
 Q: Comment activer le téléchargement d'images sur les connexions limitées ?
 R: Modifiez le fichier batch que vous utilisez pour supprimer entièrement la ligne contenant "check-metered.ps1"
 
-Q: Les images sont en 1080p même avec l'option --maxres, comment obtenir des images en 4K ?
+Q: Les images sont en 1080p, comment obtenir des images en 4K ?
 R: La définition 4K est disponible uniquement via l'API v4, prise en charge par SpotlightDL v1.5.0 ou supérieur
 
 ===============

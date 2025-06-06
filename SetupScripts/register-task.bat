@@ -17,19 +17,20 @@ for /f "delims= " %%a in ('"wmic path win32_useraccount where name='%USERNAME%' 
 )
 :loop_end
 
+if exist "%SYSTEMROOT%\System32\gpedit.msc" (
+    set LOCKSCREEN_SCRIPT=update-lockscreen-all-users.bat
+) else (
+    set LOCKSCREEN_SCRIPT=update-lockscreen.bat
+)
+
 type task-part1.xml > task.xml
 echo       ^<UserId^>%USERID%^</UserId^> >> task.xml
 type task-part2.xml >> task.xml
-echo       ^<Arguments^>"%CD%\hide-console.vbs" "%CD%\update-lockscreen.bat"^</Arguments^> >> task.xml
+echo       ^<Arguments^>"%CD%\hide-console.vbs" "%CD%\%LOCKSCREEN_SCRIPT%"^</Arguments^> >> task.xml
 type task-part3.xml >> task.xml
 
 schtasks /delete /tn SpotlightLockscreen /f >nul 2>&1
 schtasks /create /TN SpotlightLockscreen /xml task.xml
 del task.xml
 
-cmd /c update-lockscreen.bat
-
-ver | findstr 10.0 >nul
-if "%errorlevel%" == "0" (
-    reg add HKCU\Software\Policies\Microsoft\Windows\CloudContent /v DisableWindowsSpotlightFeatures /t REG_DWORD /d 1 /f
-)
+cmd /c %LOCKSCREEN_SCRIPT%

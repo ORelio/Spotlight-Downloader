@@ -63,7 +63,8 @@ namespace SpotlightDownloader
                         "  --embed-meta        When available, embed metadata into wallpaper or lockscreen image",
                         "  --from-file         Set the specified file as wallpaper/lockscreen instead of downloading",
                         "  --from-dir          Set a random image from the specified directory as wallpaper/lockscreen",
-                        "  --restore           Restore the default lockscreen image, has no effect with other actions",
+                        "  --allusers          Define the lockscreen image system-wide (requires admin privileges)",
+                        "  --restore           Restore the default system lockscreen image (requires admin privileges)",
                         "  --verbose           Display additional status messages while downloading images from API",
                         "",
                         "Exit codes:",
@@ -178,14 +179,25 @@ namespace SpotlightDownloader
                                 }
                                 else if (pArgs.Action == "lockscreen")
                                 {
-                                    var lockscreenSuccess = false;
+                                    var lockscreenSuccess = true;
                                     if (pArgs.Restore)
                                     {
-                                        lockscreenSuccess = await LockScreenHelper.Restore().ConfigureAwait(false);
+                                        lockscreenSuccess &= await LockScreenHelper.SetUserImage(null).ConfigureAwait(false);
+                                        if (pArgs.AllUsers)
+                                        {
+                                            lockscreenSuccess &= await LockScreenHelper.SetSystemImage(null).ConfigureAwait(false);
+                                            LockScreenHelper.PolicySetSpotlightEnabled(true); // Enterprise/Education only, has no effect otherwise
+                                        }
                                     }
                                     else
                                     {
-                                        lockscreenSuccess = await LockScreenHelper.Setup(imageFile).ConfigureAwait(false);
+                                        lockscreenSuccess &= await LockScreenHelper.SetUserImage(imageFile).ConfigureAwait(false);
+                                        await LockScreenHelper.DisableTipsCurrentUser().ConfigureAwait(false); // Works on all editions, but might be less reliable
+                                        if (pArgs.AllUsers)
+                                        {
+                                            lockscreenSuccess &= await LockScreenHelper.SetSystemImage(imageFile).ConfigureAwait(false);
+                                            LockScreenHelper.PolicySetSpotlightEnabled(false); // Enterprise/Education only, but more reliable
+                                        }
                                     }
                                     if (!lockscreenSuccess)
                                         Environment.Exit(4);

@@ -150,6 +150,12 @@ namespace SpotlightDownloader.CommandLineHelper
                             else
                                 throw new ArgumentException($"Input directory '{pArgs.FromFile}' does not exist.");
                             break;
+                        case "--allusers":
+                            if (pArgs.Action == "lockscreen")
+                                pArgs.AllUsers = true;
+                            else
+                                throw new ArgumentException($"Invalid --allusers argument for action: {pArgs.Action}");
+                            break;
                         case "--restore":
                             if (pArgs.Action == "lockscreen")
                                 pArgs.Restore = true;
@@ -161,7 +167,7 @@ namespace SpotlightDownloader.CommandLineHelper
                             break;
                         default:
                             throw new ArgumentException($"Unknown argument: {args[i]}");
-                    }
+                        }
                 }
 
                 if (pArgs.DownloadMany && pArgs.CacheSize < pArgs.DownloadAmount)
