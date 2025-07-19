@@ -6,7 +6,7 @@ cd "%~dp0"
 :: It will not archive pictures so old ones are deleted
 :: It will skip download on metered connections
 
-net session > nul 2>&1
+net session > nul 2>&1 || fsutil dirty query %systemdrive% > nul 2>&1
 if not "%errorlevel%" == "0" (
     echo Please run me as administrator^!
     pause > nul

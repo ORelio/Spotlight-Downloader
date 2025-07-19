@@ -1,6 +1,6 @@
 @echo off
 
-net session > nul 2>&1
+net session > nul 2>&1 || fsutil dirty query %systemdrive% > nul 2>&1
 if not "%errorlevel%" == "0" (
     echo Please run me as administrator^!
     pause > nul
