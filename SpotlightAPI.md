@@ -1,6 +1,6 @@
 ﻿# Spotlight API
 
-This page holds details about the Spotlight API. Example implementation can be found in [Spotlight.cs](SpotlightDownloader/Spotlight.cs).
+This page holds details about the Spotlight API. Example implementation can be found in [SpotlightApi.cs](SpotlightDownloader/SpotlightApi.cs).
 
 Both APIs are hosted on the same infrastructure, which can be requested at `arc.msn.com` or `fd.api.iris.microsoft.com` using the endpoint described below.
 
@@ -43,7 +43,7 @@ The JSON response contains details for one or more image(s) including image url,
 ## API v4
 
 - Used by: Windows 11
-- Used for: Lockscreen Lockscreen, Wallpaper
+- Used for: Lockscreen, Wallpaper
 - Default hostname: `fd.api.iris.microsoft.com`
 - Endpoint: `/v4/api/selection`
 - Maximum resolution: `4K`
