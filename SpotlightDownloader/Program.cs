@@ -9,7 +9,7 @@ using SpotlightDownloader.CommandLineHelper;
 namespace SpotlightDownloader
 {
     /// <summary>
-    /// Download Microsoft Spotlight images - By ORelio & Contributors (c) 2018-2025 - CDDL 1.0
+    /// Download Microsoft Spotlight images - By ORelio & Contributors (c) 2018-2026 - CDDL 1.0
     /// </summary>
     sealed class Program
     {

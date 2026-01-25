@@ -276,6 +276,9 @@ namespace SpotlightDownloader
 
             if (adjustToScreen)
             {
+                // Make sure we get the actual screen resolution for the primary monitor by signaling the app as "DPI Aware"
+                System.Windows.Forms.Application.SetHighDpiMode(System.Windows.Forms.HighDpiMode.SystemAware);
+
                 // Crop image to get correct aspect ratio, optionally downscaling it if screen is smaller
                 Rectangle screen = System.Windows.Forms.Screen.PrimaryScreen.Bounds;
                 Image img2 = FixedImageResize(img, screen.Width, screen.Height, true);
