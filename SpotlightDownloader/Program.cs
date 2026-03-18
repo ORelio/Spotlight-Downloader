@@ -112,136 +112,147 @@ namespace SpotlightDownloader
 
                         if (images.Length < 1)
                         {
-                            await Console.Error.WriteLineAsync($"{Name} received an empty image set from Spotlight API.").ConfigureAwait(false);
-                            Environment.Exit(2);
-                        }
-
-                        Random rng = new();
-#pragma warning disable CA5394
-                        // false alarm: just randomizing the order of the images, no need for cryptographic purposes
-                        SpotlightImage randomImage = images[rng.Next(images.Length)];
-#pragma warning restore CA5394
-
-                        if (pArgs.Action == "urls")
-                        {
-                            if (pArgs.SingleImage)
+                            if (pArgs.DownloadMany)
                             {
-                                Console.WriteLine(randomImage.Uri);
+                                await Console.Error.WriteLineAsync($"{Name} received an empty image set from Spotlight API - Waiting 10 seconds before retrying...").ConfigureAwait(false);
+                                await Task.Delay(TimeSpan.FromSeconds(10)).ConfigureAwait(false);
+                                noNewImgCount++;
                             }
                             else
                             {
-                                foreach (SpotlightImage image in images)
-                                {
-                                    Console.WriteLine(image.Uri);
-                                }
+                                await Console.Error.WriteLineAsync($"{Name} received an empty image set from Spotlight API.").ConfigureAwait(false);
+                                Environment.Exit(2);
                             }
-                            Environment.Exit(0);
                         }
-
-                        try
+                        else
                         {
-                            if (pArgs.SingleImage || pArgs.Action == "wallpaper" || pArgs.Action == "lockscreen")
+                            Random rng = new();
+    #pragma warning disable CA5394
+                            // false alarm: just randomizing the order of the images, no need for cryptographic purposes
+                            SpotlightImage randomImage = images[rng.Next(images.Length)];
+    #pragma warning restore CA5394
+
+                            if (pArgs.Action == "urls")
                             {
-                                string imageFile = null;
-
-                                if (!pArgs.Restore)
+                                if (pArgs.SingleImage)
                                 {
-                                    imageFile = pArgs.FromFile ?? await randomImage.DownloadToFile(pArgs.OutputDir, pArgs.IntegrityCheck, pArgs.Metadata, pArgs.OutputName, pArgs.ApiTryCount).ConfigureAwait(false);
-
-                                    Console.WriteLine(imageFile);
-
-                                    if (pArgs.EmbedMetadata)
-                                    {
-                                        imageFile = SpotlightImage.EmbedMetadata(
-                                            imageFile,
-                                            pArgs.OutputDir,
-                                            pArgs.OutputName ?? Path.GetFileNameWithoutExtension(imageFile)
-                                        );
-                                    }
+                                    Console.WriteLine(randomImage.Uri);
                                 }
-
-                                if (pArgs.Action == "wallpaper")
+                                else
                                 {
-                                    try
+                                    foreach (SpotlightImage image in images)
                                     {
-                                        WallpaperHelper.SetWallpaper(imageFile);
-#pragma warning disable CA1303
-                                        // no plans for localization yet so temporary disable CA1303
-                                        Console.WriteLine("Wallpaper set successfully.");
-#pragma warning restore CA1303
+                                        Console.WriteLine(image.Uri);
                                     }
-                                    catch (Exception e)
-                                    {
-                                        await Console.Error.WriteLineAsync("Failed to set wallpaper: " + e.Message).ConfigureAwait(false);
-                                        Environment.Exit(4);
-                                        throw;
-                                    }
-                                }
-                                else if (pArgs.Action == "lockscreen")
-                                {
-                                    var lockscreenSuccess = true;
-                                    if (pArgs.Restore)
-                                    {
-                                        lockscreenSuccess &= await LockScreenHelper.SetUserImage(null).ConfigureAwait(false);
-                                        if (pArgs.AllUsers)
-                                        {
-                                            lockscreenSuccess &= await LockScreenHelper.SetSystemImage(null).ConfigureAwait(false);
-                                            LockScreenHelper.PolicySetSpotlightEnabled(true); // Enterprise/Education only, has no effect otherwise
-                                        }
-                                    }
-                                    else
-                                    {
-                                        lockscreenSuccess &= await LockScreenHelper.SetUserImage(imageFile).ConfigureAwait(false);
-                                        await LockScreenHelper.DisableTipsCurrentUser().ConfigureAwait(false); // Works on all editions, but might be less reliable
-                                        if (pArgs.AllUsers)
-                                        {
-                                            lockscreenSuccess &= await LockScreenHelper.SetSystemImage(imageFile).ConfigureAwait(false);
-                                            LockScreenHelper.PolicySetSpotlightEnabled(false); // Enterprise/Education only, but more reliable
-                                        }
-                                    }
-                                    if (!lockscreenSuccess)
-                                        Environment.Exit(4);
                                 }
                                 Environment.Exit(0);
                             }
 
-                            downloadCount = 0;
-
-                            foreach (SpotlightImage image in images)
+                            try
                             {
-                                string imagePath = image.GetFilePath(pArgs.OutputDir);
-                                if (!File.Exists(imagePath))
+                                if (pArgs.SingleImage || pArgs.Action == "wallpaper" || pArgs.Action == "lockscreen")
                                 {
-                                    try
+                                    string imageFile = null;
+
+                                    if (!pArgs.Restore)
                                     {
-                                        Console.WriteLine(await image.DownloadToFile(pArgs.OutputDir, pArgs.IntegrityCheck, pArgs.Metadata, null, pArgs.ApiTryCount).ConfigureAwait(false));
-                                        downloadCount++;
-                                        pArgs.DownloadAmount--;
-                                        if (pArgs.DownloadAmount <= 0)
-                                            break;
+                                        imageFile = pArgs.FromFile ?? await randomImage.DownloadToFile(pArgs.OutputDir, pArgs.IntegrityCheck, pArgs.Metadata, pArgs.OutputName, pArgs.ApiTryCount).ConfigureAwait(false);
+
+                                        Console.WriteLine(imageFile);
+
+                                        if (pArgs.EmbedMetadata)
+                                        {
+                                            imageFile = SpotlightImage.EmbedMetadata(
+                                                imageFile,
+                                                pArgs.OutputDir,
+                                                pArgs.OutputName ?? Path.GetFileNameWithoutExtension(imageFile)
+                                            );
+                                        }
                                     }
-                                    catch (InvalidDataException)
+
+                                    if (pArgs.Action == "wallpaper")
                                     {
-                                        await Console.Error.WriteLineAsync($"Skipping invalid image: {image.Uri}").ConfigureAwait(false);
+                                        try
+                                        {
+                                            WallpaperHelper.SetWallpaper(imageFile);
+    #pragma warning disable CA1303
+                                            // no plans for localization yet so temporary disable CA1303
+                                            Console.WriteLine("Wallpaper set successfully.");
+    #pragma warning restore CA1303
+                                        }
+                                        catch (Exception e)
+                                        {
+                                            await Console.Error.WriteLineAsync("Failed to set wallpaper: " + e.Message).ConfigureAwait(false);
+                                            Environment.Exit(4);
+                                            throw;
+                                        }
+                                    }
+                                    else if (pArgs.Action == "lockscreen")
+                                    {
+                                        var lockscreenSuccess = true;
+                                        if (pArgs.Restore)
+                                        {
+                                            lockscreenSuccess &= await LockScreenHelper.SetUserImage(null).ConfigureAwait(false);
+                                            if (pArgs.AllUsers)
+                                            {
+                                                lockscreenSuccess &= await LockScreenHelper.SetSystemImage(null).ConfigureAwait(false);
+                                                LockScreenHelper.PolicySetSpotlightEnabled(true); // Enterprise/Education only, has no effect otherwise
+                                            }
+                                        }
+                                        else
+                                        {
+                                            lockscreenSuccess &= await LockScreenHelper.SetUserImage(imageFile).ConfigureAwait(false);
+                                            await LockScreenHelper.DisableTipsCurrentUser().ConfigureAwait(false); // Works on all editions, but might be less reliable
+                                            if (pArgs.AllUsers)
+                                            {
+                                                lockscreenSuccess &= await LockScreenHelper.SetSystemImage(imageFile).ConfigureAwait(false);
+                                                LockScreenHelper.PolicySetSpotlightEnabled(false); // Enterprise/Education only, but more reliable
+                                            }
+                                        }
+                                        if (!lockscreenSuccess)
+                                            Environment.Exit(4);
+                                    }
+                                    Environment.Exit(0);
+                                }
+
+                                downloadCount = 0;
+
+                                foreach (SpotlightImage image in images)
+                                {
+                                    string imagePath = image.GetFilePath(pArgs.OutputDir);
+                                    if (!File.Exists(imagePath))
+                                    {
+                                        try
+                                        {
+                                            Console.WriteLine(await image.DownloadToFile(pArgs.OutputDir, pArgs.IntegrityCheck, pArgs.Metadata, null, pArgs.ApiTryCount).ConfigureAwait(false));
+                                            downloadCount++;
+                                            pArgs.DownloadAmount--;
+                                            if (pArgs.DownloadAmount <= 0)
+                                                break;
+                                        }
+                                        catch (InvalidDataException)
+                                        {
+                                            await Console.Error.WriteLineAsync($"Skipping invalid image: {image.Uri}").ConfigureAwait(false);
+                                        }
                                     }
                                 }
-                            }
 
-                            if (pArgs.Verbose)
+                                if (pArgs.Verbose)
+                                {
+                                    await Console.Error.WriteLineAsync($"Successfully downloaded: {downloadCount} images.").ConfigureAwait(false);
+                                    await Console.Error.WriteLineAsync($"Already downloaded: {images.Length - downloadCount} images.").ConfigureAwait(false);
+                                }
+
+                                if (downloadCount == 0)
+                                    noNewImgCount++;
+                                else noNewImgCount = 0;
+                            }
+                            catch (Exception e)
                             {
-                                await Console.Error.WriteLineAsync($"Successfully downloaded: {downloadCount} images.").ConfigureAwait(false);
-                                await Console.Error.WriteLineAsync($"Already downloaded: {images.Length - downloadCount} images.").ConfigureAwait(false);
+                                await Console.Error.WriteLineAsync($"{e.GetType()}: {e.Message}").ConfigureAwait(false);
+                                Environment.Exit(3);
+                                throw;
                             }
-
-                            if (downloadCount == 0)
-                                noNewImgCount++;
-                            else noNewImgCount = 0;
-                        }
-                        catch (Exception e)
-                        {
-                            await Console.Error.WriteLineAsync($"{e.GetType()}: {e.Message}").ConfigureAwait(false);
-                            Environment.Exit(3);
-                            throw;
                         }
                     }
                     catch (Exception)
