@@ -1,5 +1,5 @@
 ﻿=======================================================
-==== SpotlightDL v1.5.0 - By ORelio - Microzoom.fr ====
+==== SpotlightDL v1.5.1 - By ORelio - Microzoom.fr ====
 ==== https://github.com/ORelio/Spotlight-Downloader ===
 =======================================================
 
@@ -151,5 +151,5 @@ The Spotlight Downloader program has been created using the following resources:
  - Agency FB font family by Microsoft Corporation (Logo)
 
 +--------------------+
-| © 2018-2024 ORelio |
+| © 2018-2026 ORelio |
 +--------------------+

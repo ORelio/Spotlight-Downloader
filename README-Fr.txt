@@ -1,5 +1,5 @@
 ﻿========================================================
-==== SpotlightDL v1.5.0 - Par ORelio - Microzoom.fr ====
+==== SpotlightDL v1.5.1 - Par ORelio - Microzoom.fr ====
 ==== https://github.com/ORelio/Spotlight-Downloader ====
 ========================================================
 
@@ -153,5 +153,5 @@ Spotlight Downloader a été conçu en utilisant les ressources suivantes :
  - Police Agency FB par Microsoft Corporation (Logo)
 
 +--------------------+
-| © 2018-2024 ORelio |
+| © 2018-2026 ORelio |
 +--------------------+

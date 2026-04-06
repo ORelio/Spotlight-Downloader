@@ -9,12 +9,12 @@ using System.Threading;
 namespace SpotlightDownloader
 {
     /// <summary>
-    /// Download Microsoft Spotlight images - By ORelio (c) 2018-2024 - CDDL 1.0
+    /// Download Microsoft Spotlight images - By ORelio (c) 2018-2026 - CDDL 1.0
     /// </summary>
     class Program
     {
         public const string Name = "SpotlightDL";
-        public const string Version = "1.5.0";
+        public const string Version = "1.5.1";
 
         static void Main(string[] args)
         {
