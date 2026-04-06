@@ -11,8 +11,12 @@ It is useful in the following use cases:
 # Download
 
 Have a look at the [releases section](https://github.com/ORelio/Spotlight-Downloader/releases) to get a build. There are two major versions:
+
 * v1.x.x for Windows 7 and greater, Mac and Linux (.NET 4)
 * v2.x.x for Windows 10 and greater (.NET 9)
+
+> [!NOTE]
+> The only difference between both versions, besides OS support, is how LockScreen support is implemented for Windows 8 and greater. v1.x does that by manipulating system files, while v2.x does it using proper APIs. See [LockScreenAPI.md](LockScreenAPI.md).
 
 # How to use
 

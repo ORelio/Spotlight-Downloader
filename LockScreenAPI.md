@@ -4,6 +4,8 @@ This documentation list methods of changing the Windows lock screen.
 
 ## Windows 7
 
+_SpotlightDL v1.x only_
+
 Windows 7 has an [OEMBackground](https://www.askvg.com/windows-7-supports-login-screen-customization-without-3rd-party-software-how-to-instructions-inside/) feature in registry allowing custom Logon Screen background:
 
 ````
@@ -19,6 +21,8 @@ Windows 7 enforces a limit of 250 KiB, so SpotlightDL will recompress the image 
 
 ### User LockScreen API
 
+_SpotlightDL v2.x only_
+
 Setting a lockscreen image for the current user account is straightforward using the .NET API:
 
 ```C#
@@ -29,6 +33,8 @@ await LockScreen.SetImageFileAsync(file);
 Reference: [LockScreen.SetImageFileAsync](https://learn.microsoft.com/en-us/uwp/api/windows.system.userprofile.lockscreen.setimagefileasync?view=winrt-26100)
 
 ### System LockScreen Policy (GPO)
+
+_SpotlightDL v2.x only_
 
 _Require administrator privileges. Works will all editions **except Home and Pro**._
 
@@ -59,6 +65,8 @@ References:
 
 ### System LockScreen Policy (CSP)
 
+_SpotlightDL v2.x only_
+
 _Require administrator privileges. Works will all editions **except Home**. Windows 10 1709 or greater._
 
 > [!NOTE]
@@ -79,8 +87,9 @@ References:
 
 ### By manipulating system files
 
-_That was the method implemented in Spotlight Downloader v1.x._
-_Require administrator privileges. Works with any Windows edition, but might break things._
+_SpotlightDL v1.x only_
+
+_Require administrator privileges. Works with any Windows edition **including Home**, but might break things._
 
 The global lock screen images for Windows 8+ are stored as `C:\Windows\Web\Screen\imgXXX.jpg`.
 SpotlightDL v1.x backups each image as `imgXXX.jpg.bak` if it does not already exists, then overwrite this file.
@@ -92,4 +101,4 @@ by setting the local `Administrators` group as new owner of the relevant files a
 Then, programs running as administrator can overwrite the lockscreen image and clear the cache.
 
 This way of replacing the lockscreen is basically a C# implementation of [this script](https://www.reddit.com/r/PowerShell/comments/5fglby/powershell_to_set_windows_10_lockscreen/daoepvj/),
-avoiding the use of the `takeown` and `iacls` commands which are not reliable due to a [localization issue](http://community.idera.com/powershell/ask_the_experts/f/powershell_for_windows-12/10227/trying-to-make-a-takeown-exe-cmdlet-but-locales-is-causing-a-problem).
+avoiding the use of the `takeown` and `iacls` commands which are not reliable due to command-line switches changing depending on system locale.
