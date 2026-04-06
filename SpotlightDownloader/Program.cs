@@ -14,7 +14,7 @@ namespace SpotlightDownloader
     sealed class Program
     {
         public const string Name = "SpotlightDL";
-        public const string Version = "2.0.0";
+        public const string Version = "2.0.1";
 
         static async Task Main(string[] args)
         {

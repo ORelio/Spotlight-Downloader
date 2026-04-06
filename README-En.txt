@@ -1,5 +1,5 @@
 ﻿==============================================================
-==== SpotlightDL v2.0.0 - By ORelio & GitHub contributors ====
+==== SpotlightDL v2.0.1 - By ORelio & GitHub contributors ====
 ======= https://github.com/ORelio/Spotlight-Downloader =======
 ==============================================================
 
@@ -160,5 +160,5 @@ The Spotlight Downloader program has been created using the following resources:
  - Agency FB font family by Microsoft Corporation (Logo)
 
 +------------------------------------------+
-| © 2018-2025 ORelio & GitHub contributors |
+| © 2018-2026 ORelio & GitHub contributors |
 +------------------------------------------+
