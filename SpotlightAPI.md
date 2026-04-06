@@ -1,4 +1,10 @@
-﻿# Spotlight API
+﻿## Warning: You are browsing branch v1.x
+
+**👉 [Click here for up-to-date documentation](https://github.com/ORelio/Spotlight-Downloader/blob/master/LockScreenAPI.md) 👈**
+
+---
+
+# Spotlight API
 
 This page holds details about the Spotlight API. Example implementation can be found in [Spotlight.cs](SpotlightDownloader/Spotlight.cs).
 

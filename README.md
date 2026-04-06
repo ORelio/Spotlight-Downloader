@@ -1,4 +1,10 @@
-﻿![SpotlightDL](Images/logo.png)
+﻿## Warning: You are browsing branch v1.x
+
+**👉 [Click here for up-to-date README](https://github.com/ORelio/Spotlight-Downloader) 👈**
+
+---
+
+![SpotlightDL](Images/logo.png)
 
 This program can retrieve Windows Spotlight images by requesting the Microsoft Spotlight API.
 SpotlightDL can also define images as wallpaper and system-wide lockscreen image.
