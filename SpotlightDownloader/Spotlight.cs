@@ -89,7 +89,7 @@ namespace SpotlightDownloader
                 // This API also returns fileSize and sha256 to allow verifying image integrity after download
                 request = String.Format(
                     "https://arc.msn.com/v3/Delivery/Placement?pid=338387&fmt=json&ua=WindowsShellClient"
-                        + "%2F0&cdm=1&disphorzres={0}&dispvertres={1}&pl={2}&lc={3}&ctry={4}&time={5}",
+                        + "%2F0&cdm=1&disphorzres={0}&dispvertres={1}&lo=80217&pl={2}&lc={3}&ctry={4}&time={5}",
                         screenWidth,
                         screenHeight,
                     locale,
