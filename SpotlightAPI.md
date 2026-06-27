@@ -30,11 +30,12 @@ Where the expected arguments are:
 - `cdm`: Purpose currently unknown, `cdm=1`
 - `disphorzres`: Screen width in pixels
 - `dispvertres`: Screen height in pixels
-- `lo`: Purpose currently unknown, optional
+- `lo`: Purpose currently unknown, any value from 1440 to max int32 (See [#47](https://github.com/ORelio/Spotlight-Downloader/issues/47))
 - `pl`: Locale, e.g. `en-US`
 - `lc`: Language, e.g. `en-US`
 - `ctry`: Country, e.g. `us`
 - `time`: Time, e.g. `2017-12-31T23:59:59Z`
+- `rver`: Optional, set to `2` for newer API response format (See [#47](https://github.com/ORelio/Spotlight-Downloader/issues/47))
 
 The JSON response contains details for one or more image(s) including image url, title, sha256, ads, etc.
 

@@ -14,7 +14,7 @@ using static System.String;
 namespace SpotlightDownloader
 {
     /// <summary>
-    /// Wrapper around the Spotlight JSON API - By ORelio (c) 2018-2024 - CDDL 1.0
+    /// Wrapper around the Spotlight JSON API - By ORelio (c) 2018-2026 - CDDL 1.0
     /// </summary>
     static class SpotlightApi
     {
@@ -87,7 +87,7 @@ namespace SpotlightDownloader
                 request = new Uri(Format(
                     CultureInfo.InvariantCulture,
                     "https://arc.msn.com/v3/Delivery/Placement?pid=338387&fmt=json&ua=WindowsShellClient"
-                    + "%2F0&cdm=1&pl={0}&lc={1}&ctry={2}&time={3}",
+                    + "%2F0&cdm=1&lo=80217&pl={0}&lc={1}&ctry={2}&time={3}",
                     locale,
                     locale,
                     region,
